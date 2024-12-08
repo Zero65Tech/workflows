@@ -13,8 +13,8 @@ const workflows = [
 
     const workflow = await workflowService.getByNameAndOwner(name, owner);
     const workflowId = workflow
-        ? workflow.id
-        : await workflowService.add({ name, owner });
+      ? workflow.id
+      : await workflowService.add({ name, owner });
 
     const steps = JSON.stringify(require(`./${name}.json`));
     const checksum = generateChecksum(steps);

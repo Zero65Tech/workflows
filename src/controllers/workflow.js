@@ -1,4 +1,4 @@
-const entityService = require('../services/entity');
+const entityService = require('../services/workflow');
 
 exports.list = async (req, res) => {
   const list = await entityService.list();
