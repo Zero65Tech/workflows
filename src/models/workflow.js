@@ -5,4 +5,4 @@ exports.add = Joi.object({
   owner: Joi.string().required(),
   created: Joi.date().iso().required(),
   updated: Joi.date().iso().required()
-});
+}).required();

@@ -7,7 +7,7 @@ exports.getByNameAndOwner = async (name, owner) => {
 }
 
 exports.add = async (data) => {
-  data.create = new Date();
-  data.update = new Date();
+  data.created = new Date();
+  data.updated = new Date();
   return workflowRepository.add(data);
 }

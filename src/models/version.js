@@ -6,4 +6,4 @@ exports.add = Joi.object({
   checksum: Joi.string().required(),
   created: Joi.date().iso().required(),
   updated: Joi.date().iso().required()
-});
+}).required();

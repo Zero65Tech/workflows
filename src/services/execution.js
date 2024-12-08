@@ -7,7 +7,7 @@ exports.getByStepAndTask = async (workflowId, step, task) => {
 }
 
 exports.add = async (data) => {
-  data.create = new Date();
-  data.update = new Date();
+  data.created = new Date();
+  data.updated = new Date();
   return executionRepository.add(data);
 }

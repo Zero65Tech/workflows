@@ -6,8 +6,8 @@ exports.getByChecksum = async (workflowId, checksum) => {
 
 }
 
-exports.add = async (data) => {
-  data.create = new Date();
-  data.update = new Date();
-  return versionRepository.add(data);
+exports.add = async (workflowId, data) => {
+  data.created = new Date();
+  data.updated = new Date();
+  return versionRepository.add(workflowId, data);
 }
