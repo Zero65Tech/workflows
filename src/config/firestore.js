@@ -11,5 +11,5 @@ const config = {
 }
 
 module.exports = process.env.STAGE === 'prod' || process.env.STAGE === 'gamma'
-    ? config.production
-    : config.development; // beta & alpha
+  ? config.production
+  : config.development; // beta & alpha

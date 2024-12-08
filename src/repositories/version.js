@@ -4,7 +4,7 @@ const Config = require('../config/firestore');
 const Firestore = new firestore.Firestore({ projectId: Config.projectId });
 const Collection = Firestore.collection(Config.collection);
 
-const workflowModel = require('../models/workflow');
+const versionModel = require('../models/version');
 
 function toData(doc) {
   const data = { id: doc.id, ...doc.data() };
@@ -12,11 +12,11 @@ function toData(doc) {
   return data;
 }
 
-exports.getByNameAndOwner = async (name, owner) => {
+exports.getByChecksum = async (workflowId, checksum) => {
 
-  const query = Collection
-      .where('name', '==', name)
-      .where('owner', '==', owner);
+  const query = Collection.doc(workflowId)
+      .collection('versions')
+      .where('checksum', '==', checksum);
   
   const snap = await query.get();
   if(snap.empty)
@@ -29,8 +29,8 @@ exports.getByNameAndOwner = async (name, owner) => {
 
 }
 
-exports.add = async (data) => {
-  await workflowModel.add.validateAsync(data);
-  const ref = await Collection.add(data);
+exports.add = async (workflowId, data) => {
+  await versionModel.add.validateAsync(data);
+  const ref = await Collection.doc(workflowId).collection('versions').add(data);
   return ref.id;
 }
