@@ -1,4 +1,4 @@
-const entityRepository = require('../repositories/entity');
+const entityRepository = require('../repositories/workflow');
 
 exports.list = async () => {
   return await entityRepository.getAll();

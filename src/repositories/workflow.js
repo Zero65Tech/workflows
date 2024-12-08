@@ -4,7 +4,7 @@ const Config = require('../config/firestore');
 const Firestore = new firestore.Firestore({ projectId: Config.projectId });
 const Collection = Firestore.collection(Config.collection);
 
-const entityModel = require('../models/entity');
+const entityModel = require('../models/workflow');
 
 function toData(doc) {
   const data = { id: doc.id, ...doc.data() };

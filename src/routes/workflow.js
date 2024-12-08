@@ -1,5 +1,5 @@
 const express = require('express');
-const entityController = require('../controllers/entity');
+const entityController = require('../controllers/workflow');
 
 const router = express.Router();
 

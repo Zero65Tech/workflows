@@ -1,8 +1,8 @@
 {
   "author": "Prashant Gupta @ Zero65 Technologies Pvt. Ltd.",
-  "name": "hello-nodejs",
-  "version": "0.4.0",
-  "description": "Node.js Template",
+  "name": "workflows",
+  "version": "1.4.0",
+  "description": "Workflows",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -12,13 +12,7 @@
   },
   "dependencies": {
     "@google-cloud/firestore": "7.11.x",
-    "@zero65tech/date-string-ist": "4.0.x",
-    "@zero65tech/file": "4.0.x",
-    "@zero65tech/format": "4.0.x",
-    "@zero65tech/indian-stock-market": "4.1.x",
     "@zero65tech/log": "4.0.x",
-    "@zero65tech/object": "4.0.x",
-    "cors": "2.8.x",
     "express": "4.21.x",
     "joi": "17.13.x",
     "lodash": "4.17.x"
