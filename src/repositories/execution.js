@@ -4,7 +4,7 @@ const Config = require('../config/firestore');
 const Firestore = new firestore.Firestore({ projectId: Config.projectId });
 const Collection = Firestore.collection(Config.collection);
 
-const versionModel = require('../models/version');
+const executionModel = require('../models/execution');
 
 function toData(doc) {
   const data = { id: doc.id, ...doc.data() };
@@ -12,11 +12,12 @@ function toData(doc) {
   return data;
 }
 
-exports.getByChecksum = async (workflowId, checksum) => {
+exports.getByStepAndTask = async (workflowId, step, task) => {
 
   const query = Collection.doc(workflowId)
-      .collection('VERSION')
-      .where('checksum', '==', checksum);
+      .collection('EXECUTION')
+      .where('step', '==', step)
+      .where('task', '==', task);
   
   const snap = await query.get();
   if(snap.empty)
@@ -30,7 +31,7 @@ exports.getByChecksum = async (workflowId, checksum) => {
 }
 
 exports.add = async (workflowId, data) => {
-  await versionModel.add.validateAsync(data);
-  const ref = await Collection.doc(workflowId).collection('VERSION').add(data);
+  await executionModel.add.validateAsync(data);
+  const ref = await Collection.doc(workflowId).collection('EXECUTION').add(data);
   return ref.id;
 }
