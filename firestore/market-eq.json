@@ -1,0 +1,45 @@
+[
+  {
+    "name": "fetch",
+    "tasks": [
+      {
+        "name": "nse",
+        "host": "https://market.zero65.in/fetch/nse"
+      },
+      {
+        "name": "bse",
+        "host": "https://market.zero65.in/fetch/bse"
+      }
+    ]
+  },
+  {
+    "name": "process",
+    "tasks": [
+      {
+        "name": "nse",
+        "host": "https://market.zero65.in/process/nse"
+      },
+      {
+        "name": "bse",
+        "host": "https://market.zero65.in/process/bse"
+      }
+    ]
+  },
+  {
+    "name": "merge",
+    "tasks": [
+      {
+        "host": "https://market.zero65.in/merge"
+      }
+    ]
+  },
+  {
+    "name": "prepare",
+    "tasks": [
+      {
+        "name": "prices",
+        "host": "https://market.zero65.in/prepare/prices"
+      }
+    ]
+  }
+]
