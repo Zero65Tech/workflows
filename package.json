@@ -8,12 +8,15 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "jest --coverage --testPathPattern=test/",
-    "lint": "npx eslint --fix src test"
+    "lint": "npx eslint --fix src test",
+    "firestore": "node firestore/index.js"
   },
   "dependencies": {
     "@google-cloud/firestore": "7.11.x",
     "@zero65tech/log": "4.0.x",
+    "crypto": "1.0.x",
     "express": "4.21.x",
+    "json-stable-stringify": "1.1.x",
     "joi": "17.13.x",
     "lodash": "4.17.x"
   },
