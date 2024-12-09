@@ -4,7 +4,7 @@ const Config = require('../config/firestore');
 const Firestore = new firestore.Firestore({ projectId: Config.projectId });
 const Collection = Firestore.collection(Config.collection);
 
-const versionModel = require('../models/version');
+const taskModel = require('../models/task');
 
 function toData(doc) {
   const data = { id: doc.id, ...doc.data() };
@@ -12,11 +12,18 @@ function toData(doc) {
   return data;
 }
 
-exports.findOneByChecksum = async (workflowId, checksum) => {
+exports.get = async (workflowId, taskId) => {
+  const doc = await Collection.doc(workflowId).collection('TASK').doc(taskId).get();
+  return doc.exists ? toData(doc) : null;
+}
+
+exports.findOneByExecutionStepAndTask = async (workflowId, executionId, step, task) => {
 
   const query = Collection.doc(workflowId)
-      .collection('VERSION')
-      .where('checksum', '==', checksum);
+      .collection('TASK')
+      .where('executionId', '==', executionId)
+      .where('step', '==', step)
+      .where('task', '==', task);
   
   const snap = await query.get();
   if(snap.empty)
@@ -30,7 +37,7 @@ exports.findOneByChecksum = async (workflowId, checksum) => {
 }
 
 exports.add = async (workflowId, data) => {
-  await versionModel.add.validateAsync(data);
-  const ref = await Collection.doc(workflowId).collection('VERSION').add(data);
+  await taskModel.add.validateAsync(data);
+  const ref = await Collection.doc(workflowId).collection('TASK').add(data);
   return ref.id;
 }

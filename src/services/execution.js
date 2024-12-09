@@ -1,8 +1,8 @@
 const executionRepository = require('../repositories/execution');
 
-exports.getByStepAndTask = async (workflowId, step, task) => {
+exports.get = async (workflowId, executionId) => {
 
-  return await executionRepository.getByStepAndTask(workflowId, step, task);
+  return await executionRepository.get(workflowId, executionId);
 
 }
 

@@ -12,22 +12,9 @@ function toData(doc) {
   return data;
 }
 
-exports.getByStepAndTask = async (workflowId, step, task) => {
-
-  const query = Collection.doc(workflowId)
-      .collection('EXECUTION')
-      .where('step', '==', step)
-      .where('task', '==', task);
-  
-  const snap = await query.get();
-  if(snap.empty)
-    return null;
-  
-  const docs = snap.docs.map(toData);
-  docs.sort((a, b) => b.created - a.created);
-
-  return docs[0];
-
+exports.get = async (workflowId, executionId) => {
+  const doc = await Collection.doc(workflowId).collection('EXECUTION').doc(executionId).get();
+  return doc.exists ? toData(doc) : null;
 }
 
 exports.add = async (workflowId, data) => {

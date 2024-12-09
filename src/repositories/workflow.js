@@ -12,7 +12,7 @@ function toData(doc) {
   return data;
 }
 
-exports.getByNameAndOwner = async (name, owner) => {
+exports.findOneByNameAndOwner = async (name, owner) => { // Needed for back-filling data from GitHub repository
 
   const query = Collection
       .where('name', '==', name)

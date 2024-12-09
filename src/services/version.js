@@ -2,7 +2,7 @@ const versionRepository = require('../repositories/version');
 
 exports.getByChecksum = async (workflowId, checksum) => {
 
-  return await versionRepository.getByChecksum(workflowId, checksum);
+  return await versionRepository.findOneByChecksum(workflowId, checksum);
 
 }
 

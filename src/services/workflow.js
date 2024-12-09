@@ -1,8 +1,8 @@
 const workflowRepository = require('../repositories/workflow');
 
-exports.getByNameAndOwner = async (name, owner) => {
+exports.getByNameAndOwner = async (name, owner) => { // Needed for back-filling data from GitHub repository
 
-  return await workflowRepository.getByNameAndOwner(name, owner);
+  return await workflowRepository.findOneByNameAndOwner(name, owner);
 
 }
 

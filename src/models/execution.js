@@ -1,7 +1,6 @@
 const Joi = require('joi');
 
 exports.add = Joi.object({
-  workflowId: Joi.string().required(),
   versionId: Joi.string().required(),
   nextRun: Joi.date().iso().required(),
   created: Joi.date().iso().required(),
