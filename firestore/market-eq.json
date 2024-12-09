@@ -1,7 +1,10 @@
 {
-  "params": {
-    "date": { "type": "date" }
-  },
+  "params": [
+    {
+      "name": "date",
+      "type": "date"
+    }
+  ],
   "steps": [
     {
       "name": "fetch",
