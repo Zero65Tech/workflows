@@ -4,7 +4,9 @@ const { generateChecksum } = require("../src/utils");
 
 const owner = 'zero65';
 const workflows = [
-  'market-eq'
+  'market-mf',
+  'market-eq',
+  'market-fo',
 ];
 
 (async () => {

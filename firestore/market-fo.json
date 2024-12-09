@@ -1,0 +1,34 @@
+[
+    {
+      "name": "fetch",
+      "tasks": [
+        {
+          "name": "nse",
+          "host": "https://market.zero65.in/fetch/nse-fo"
+        }
+      ]
+    },
+    {
+      "name": "process",
+      "tasks": [
+        {
+          "name": "nse",
+          "host": "https://market.zero65.in/process/nse-fo"
+        }
+      ]
+    },
+    {
+      "name": "prepare",
+      "tasks": [
+        {
+          "name": "prices",
+          "host": "https://market.zero65.in/prepare/prices-fo"
+        },
+        {
+          "name": "strikes",
+          "host": "https://market.zero65.in/prepare/strikes-fo"
+        }
+      ]
+    }
+  ]
+  
