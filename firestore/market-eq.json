@@ -1,45 +1,50 @@
-[
-  {
-    "name": "fetch",
-    "tasks": [
-      {
-        "name": "nse",
-        "host": "https://market.zero65.in/fetch/nse-eq"
-      },
-      {
-        "name": "bse",
-        "host": "https://market.zero65.in/fetch/bse-eq"
-      }
-    ]
+{
+  "params": {
+    "date": { "type": "date" }
   },
-  {
-    "name": "process",
-    "tasks": [
-      {
-        "name": "nse",
-        "host": "https://market.zero65.in/process/nse-eq"
-      },
-      {
-        "name": "bse",
-        "host": "https://market.zero65.in/process/bse-eq"
-      }
-    ]
-  },
-  {
-    "name": "merge",
-    "tasks": [
-      {
-        "host": "https://market.zero65.in/merge/eq"
-      }
-    ]
-  },
-  {
-    "name": "prepare",
-    "tasks": [
-      {
-        "name": "prices",
-        "host": "https://market.zero65.in/prepare/prices-eq"
-      }
-    ]
-  }
-]
+  "steps": [
+    {
+      "name": "fetch",
+      "tasks": [
+        {
+          "name": "nse",
+          "host": "https://market.zero65.in/fetch/nse-eq"
+        },
+        {
+          "name": "bse",
+          "host": "https://market.zero65.in/fetch/bse-eq"
+        }
+      ]
+    },
+    {
+      "name": "process",
+      "tasks": [
+        {
+          "name": "nse",
+          "host": "https://market.zero65.in/process/nse-eq"
+        },
+        {
+          "name": "bse",
+          "host": "https://market.zero65.in/process/bse-eq"
+        }
+      ]
+    },
+    {
+      "name": "merge",
+      "tasks": [
+        {
+          "host": "https://market.zero65.in/merge/eq"
+        }
+      ]
+    },
+    {
+      "name": "prepare",
+      "tasks": [
+        {
+          "name": "prices",
+          "host": "https://market.zero65.in/prepare/prices-eq"
+        }
+      ]
+    }
+  ]
+}

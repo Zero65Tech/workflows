@@ -18,14 +18,19 @@ const workflows = [
       ? workflow.id
       : await workflowService.add({ name, owner });
 
-    const steps = JSON.stringify(require(`./${name}.json`));
-    const checksum = generateChecksum(steps);
+    const { params, steps } = require(`./${name}.json`);
+    const checksum = generateChecksum({ params, steps });
 
     const version = await versionService.getByChecksum(workflowId, checksum);
     if(version)
       continue;
 
-    const versionId = await versionService.add(workflowId, { steps, checksum });
+    const versionId = await versionService.add(workflowId, {
+      params: JSON.stringify(params),
+      steps: JSON.stringify(steps),
+      checksum
+    });
+    
     console.log(`Added version ${versionId} for workflow ${name}`);
 
   }
