@@ -7,20 +7,20 @@
   ],
   "steps": [
     {
-      "name": "fetch",
+      "name": "downlod",
       "tasks": [
         {
           "name": "nse",
-          "host": "https://market.zero65.in/fetch/amf"
+          "url": "https://market.zero65.in/task/fetch/amf/bhavcopy"
         }
       ]
     },
     {
-      "name": "process",
+      "name": "extract",
       "tasks": [
         {
           "name": "nse",
-          "host": "https://market.zero65.in/process/amf"
+          "url": "https://market.zero65.in/task/transform/bhavcopy/amf"
         }
       ]
     },
@@ -29,7 +29,7 @@
       "tasks": [
         {
           "name": "prices",
-          "host": "https://market.zero65.in/prepare/prices-mf"
+          "url": "https://market.zero65.in/task/prepare/prices-mf"
         }
       ]
     }

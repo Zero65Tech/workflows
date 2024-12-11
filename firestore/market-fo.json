@@ -7,20 +7,28 @@
   ],
   "steps": [
     {
-      "name": "fetch",
+      "name": "downlod",
       "tasks": [
         {
           "name": "nse",
-          "host": "https://market.zero65.in/fetch/nse-fo"
+          "url": "https://market.zero65.in/task/fetch/nse/bhavcopy-fo"
+        },
+        {
+          "name": "bse",
+          "url": "https://market.zero65.in/task/fetch/bse/bhavcopy-fo"
         }
       ]
     },
     {
-      "name": "process",
+      "name": "extract",
       "tasks": [
         {
           "name": "nse",
-          "host": "https://market.zero65.in/process/nse-fo"
+          "url": "https://market.zero65.in/task/transform/bhavcopy/nse-fo"
+        },
+        {
+          "name": "bse",
+          "url": "https://market.zero65.in/task/transform/bhavcopy/bse-fo"
         }
       ]
     },
@@ -28,12 +36,12 @@
       "name": "prepare",
       "tasks": [
         {
-          "name": "prices",
-          "host": "https://market.zero65.in/prepare/prices-fo"
+          "name": "nse",
+          "url": "https://market.zero65.in/task/prepare/prices-fo-nse"
         },
         {
-          "name": "strikes",
-          "host": "https://market.zero65.in/prepare/strikes-fo"
+          "name": "bse",
+          "url": "https://market.zero65.in/task/prepare/prices-fo-bse"
         }
       ]
     }
