@@ -1,10 +1,5 @@
 {
-  "params": [
-    {
-      "name": "date",
-      "type": "date"
-    }
-  ],
+  "params": [ "date" ],
   "steps": [
     {
       "name": "downlod",

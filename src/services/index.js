@@ -16,7 +16,7 @@ exports.updateWorkflow = async (workflowId, name, params, steps) => {
 
   const version = Version.getLatestByChecksum(workflowId, checksum);
   
-  if (version) {
+  if(version) {
     const data = { name, params, steps, updated: new Date() };
     await Version.update(workflowId, version.id, data);
     return version.id;

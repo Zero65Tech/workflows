@@ -1,16 +1,11 @@
 {
-  "params": [
-    {
-      "name": "date",
-      "type": "date"
-    }
-  ],
+  "params": [ "date" ],
   "steps": [
     {
       "name": "downlod",
       "tasks": [
         {
-          "name": "nse",
+          "name": "amf",
           "url": "https://market.zero65.in/task/fetch/amf/bhavcopy"
         }
       ]
@@ -19,7 +14,7 @@
       "name": "extract",
       "tasks": [
         {
-          "name": "nse",
+          "name": "amf",
           "url": "https://market.zero65.in/task/transform/bhavcopy/amf"
         }
       ]
