@@ -25,7 +25,7 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: "~/.config/gcloud/application_default_credentials.json"
+          credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
 
       - name: Configure Docker for Google Artifact Registry
         run: |
