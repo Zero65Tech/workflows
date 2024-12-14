@@ -8,11 +8,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
       
-      - uses: actions/setup-node@v4
-        with:
+      - with:
           node-version: ${{ inputs.NODE_VERSION }}
       
       - name: Google Artifacts Registry Access
@@ -27,8 +26,7 @@ jobs:
           
       - run: npm ci
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+      - uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
 
@@ -43,3 +41,12 @@ jobs:
       - name: Push Docker Image
         run: |
           docker push asia-south1-docker.pkg.dev/zero65-419011/docker/workflows:latest
+
+      - name: Deploy Docker Image
+        run: |
+          gcloud run deploy workflows \
+              --image=asia-south1-docker.pkg.dev/zero65-419011/docker/workflows:latest \
+              --region=asia-south1 \
+              --platform=managed \
+              --allow-unauthenticated \
+              --project=zero65-workflows
