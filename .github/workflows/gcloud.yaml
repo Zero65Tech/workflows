@@ -11,17 +11,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Google Artifacts Registry Access
-        run: | 
-          if [ -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" ]; then
-            echo "@zero65:registry=https://asia-south1-npm.pkg.dev/zero65/npm/" > ~/.npmrc
-            mkdir -p ~/.config/gcloud
-            echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" | base64 --decode > ~/.config/gcloud/application_default_credentials.json
-            npm install -g google-artifactregistry-auth
-            npx google-artifactregistry-auth
-            cat ~/.config/gcloud/application_default_credentials.json
-          fi
-
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
