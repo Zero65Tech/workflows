@@ -7,6 +7,7 @@ const workflows = [
   'market-mf',
   'market-eq',
   'market-fo',
+  'zerodha-trades'
 ];
 
 (async () => {
