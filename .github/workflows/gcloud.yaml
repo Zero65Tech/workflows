@@ -19,6 +19,7 @@ jobs:
             echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" | base64 --decode > ~/.config/gcloud/application_default_credentials.json
             npm install -g google-artifactregistry-auth
             npx google-artifactregistry-auth
+            cat ~/.config/gcloud/application_default_credentials.json
           fi
 
       - name: Authenticate to Google Cloud
