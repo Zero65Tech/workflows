@@ -2,12 +2,40 @@ const Joi = require('joi');
 
 exports.add = Joi.object({
   versionId: Joi.string().required(),
-  nextRun: Joi.date().iso().required(),
+  next: Joi.object({
+    step: Joi.string().required(),
+    retry: Joi.integer().required(),
+    scheduled: Joi.date().iso().required(),
+  }).required(),
+  runs: Joi.array().items(Joi.object({
+    step: Joi.string().required(),
+    retry: Joi.integer().required(),
+    scheduled: Joi.date().iso().required(),
+    task: Joi.string().required(),
+    started: Joi.date().iso().required(),
+    ended: Joi.date().iso().required(),
+    response: Joi.string().required()
+  }).required()).required(),
+  state: Joi.string().valid('queued').required(),
   created: Joi.date().iso().required(),
   updated: Joi.date().iso().required()
 }).required();
 
 exports.update = Joi.object({
-  nextRun: Joi.date().iso().required(),
+  next: Joi.object({
+    step: Joi.string().required(),
+    retry: Joi.integer().required(),
+    scheduled: Joi.date().iso().required(),
+  }),
+  runs: Joi.array().items(Joi.object({
+    step: Joi.string().required(),
+    retry: Joi.integer().required(),
+    scheduled: Joi.date().iso().required(),
+    task: Joi.string().required(),
+    started: Joi.date().iso().required(),
+    ended: Joi.date().iso().required(),
+    response: Joi.string().required()
+  }).required()),
+  state: Joi.string().valid('running', 'waiting', 'success', 'error'),
   updated: Joi.date().iso().required()
-}).required();
+}).or('next', 'runs', 'state').required();
