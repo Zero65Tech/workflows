@@ -1,6 +1,8 @@
 const Joi = require('joi');
 
 exports.add = Joi.object({
+  refId: Joi.string().required(),
+  params: Joi.object().required(),
   versionId: Joi.string().required(),
   next: Joi.object({
     step: Joi.string().required(),

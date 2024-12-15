@@ -27,22 +27,36 @@ exports.updateWorkflow = async (workflowId, name, params, steps) => {
 
 }
 
-exports.executeWorkflow = async (workflowId, params) => {
+exports.executeWorkflow = async (workflowId, refId, params) => {
 
   const version = Version.getLatest(workflowId);
 
-  return await Execution.create(workflowId, version.id, params);
+  // TODO: Create a Google Cloud Task with id as <workflowId>$<refId>
+
+  return await Execution.create(workflowId, refId, version.id, params);
 
 }
 
-exports.processTasks = async () => {
-  const executions = Execution.getAllAtive();
-  for(const execution of executions) {
-    const version = Version.getLatest(workflowId);
-    // iterate over steps
-    // if task(s) is already created, update task status
-    // create task for next step
-    await Task.create(execution.workflowId, { executionId: execution.id, status: 'pending', host: 'localhost', params: execution.params });
-    // if all steps are completed, update execution status
+exports.executeWorkflowStep = async (workflowId, refId, step, retry) => {
+
+  let execution; // Get execution by workflowId and refId
+
+  if(!step) {
+    /*
+      - Create a Google Cloud Task with id as <workflowId>$<refId>$<step>
+      - Update execution with next step
+        next = { step: <first-step-name>, retry: 0, scheduled: new Date() };
+    */
+  } else {
+    /*
+      - Fetch tasks' url
+      - if task(s) are successfule, update execution with next step
+        next = { step: <next-step-name>, retry: 0, scheduled: new Date() };
+      - if one or more task(s) failed, throw error
+      - if one or more task request reschedule
+        Create a Google Cloud Task with id as <workflowId>$<refId>$<step>$<retry>
+        next = { step: <current-step-name>, retry: 1, scheduled: new Date() };
+    */
   }
+
 }
