@@ -1,9 +1,8 @@
-const { assert } = require("joi");
 
 exports.createWorkflow = async (name, owner) => {
 
   const workflow = await Workflow.getLatestByNameAndOwner(name, owner);
-  if(workflow)
+  if(workflow) // Required for backfilling data from firestore folder. TODO: Remove this after backfilling.
     return workflow.id;
 
   const data = { name, owner, created: new Date(), updated: new Date() };
@@ -71,7 +70,7 @@ exports.processWorkflow = async (workflowId, refId, step, retry) => {
   
   assert(execution.state == 'running' || execution.state == 'waiting');
 
-  if(step != execution.next.step || retry == execution.next.retry || new Date() < execution.next.scheduled)
+  if(step != execution.next.step || retry != execution.next.retry || new Date() < execution.next.scheduled)
     throw new Error('Execution not found');
 
 
@@ -84,8 +83,19 @@ exports.processWorkflow = async (workflowId, refId, step, retry) => {
   // TODO: Fetch tasks' url
   // TODO: Update tasks' runs with ended and response
 
-  const next = { step: version.steps.find(s => s.name == step).next, retry: 0, scheduled: new Date() };
-  // TODO: Create a Google Cloud Task with id as <workflowId>$<refId>$<next.step>
-  await Execution.update(workflowId, { next, runs: [ ...execution.runs, ...runs ], state: 'waiting', updated: new Date() });
+  await Execution.update(workflowId, { runs: [ ...execution.runs, ...runs ], state: 'waiting', updated: new Date() });
+
+
+  if(!version.steps[step + 1])
+    return await Execution.update(workflowId, { state: 'completed', updated: new Date() });
+  
+
+  // TODO:
+  // Create a Google Cloud Task with id as <workflowId>$<refId>$step-<step+1>
+  // Proceed only if the task is created successfully
+  // throw error otherwise
+
+
+  const next = { step: step+1, retry: 0, scheduled: new Date() };
 
 }
