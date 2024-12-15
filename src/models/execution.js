@@ -17,7 +17,6 @@ const runsFiled = Joi.array().items(Joi.object({
 }));
 
 exports.add = Joi.object({
-  refId: Joi.string().required(),
   versionId: Joi.string().required(),
   params: Joi.object().required(),
   next: nextField.required(),

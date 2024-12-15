@@ -1,4 +1,3 @@
-
 exports.createWorkflow = async (name, owner) => {
 
   const workflow = await Workflow.getLatestByNameAndOwner(name, owner);
@@ -25,28 +24,15 @@ exports.updateWorkflow = async (workflowId, name, params, steps) => {
 
 }
 
-exports.triggerWorkflow = async (workflowId, refId, params) => {
-
-  const execution = await Execution.getLatestByRefId(workflowId, refId);
-  if(execution) {
-    if(execution.state == 'running' || execution.state == 'waiting')
-      return execution.id;
-    assert(execution.state == 'completed' || execution.state == 'failed');
-  }
-
-  // TODO:
-  // Create a Google Cloud Task with id as <workflowId>$<refId>$step-0
-  // Proceed only if the task is created successfully
-  // throw error otherwise
+exports.triggerWorkflow = async (workflowId, params) => {
 
   const version = Version.getLatest(workflowId);
 
   const data = {
-    refId: refId,
     versionId: version.id,
     params: params,
     next: {
-      step: version.steps[0].name,
+      step: 0,
       retry: 0,
       scheduled: new Date()
     },
@@ -56,46 +42,49 @@ exports.triggerWorkflow = async (workflowId, refId, params) => {
     updated: new Date()
   }
 
-  return await Execution.create(workflowId, data);
+  const executionId = await Execution.create(workflowId, data);
+
+  // TODO:
+  // Create a Google Cloud Task with id as <workflowId>$<executionId>$step-0
+  // Proceed if the task is created successfully
+  // throw error otherwise
 
 }
 
-exports.processWorkflow = async (workflowId, refId, step, retry) => {
+exports.processWorkflow = async (workflowId, executionId, step, retry) => {
 
-  const execution = await Execution.getLatestByRefId(workflowId, refId);
-  if(!execution)
-    throw new Error('Execution not found');
-  else if(execution.state == 'completed' || execution.state == 'failed')
-    throw new Error('Execution not found');
-  
+  const execution = await Execution.get(workflowId, executionId);
+
   assert(execution.state == 'running' || execution.state == 'waiting');
-
-  if(step != execution.next.step || retry != execution.next.retry || new Date() < execution.next.scheduled)
-    throw new Error('Execution not found');
-
+  assert(step == execution.next.step && retry == execution.next.retry && new Date() >= execution.next.scheduled);
 
   const version = Version.get(workflowId, execution.versionId);
-  const tasks = version.steps.find(s => s.name == step).tasks;
-  const runs = tasks.map(t => ({ ...execution.next, task: t.name, started: new Date(), ended: null, response: null }));
+  const tasks = version.steps[step].tasks;
+  // TODO: filter out tasks that are already run
 
-  await Execution.update(workflowId, { runs: [ ...execution.runs, ...runs ], state: 'running', updated: new Date() });
+  const runs = tasks.map(task => ({
+      step      : version.steps[execution.next.step].name,
+      task      : task.name,
+      scheduled : execution.next.scheduled,
+      started   : new Date(),
+      ended     : null,
+      response  : null
+  }));
+
+  await Execution.update(workflowId, executionId, { runs: [ ...execution.runs, ...runs ], state: 'running', updated: new Date() });
 
   // TODO: Fetch tasks' url
   // TODO: Update tasks' runs with ended and response
 
-  await Execution.update(workflowId, { runs: [ ...execution.runs, ...runs ], state: 'waiting', updated: new Date() });
+  await Execution.update(workflowId, executionId, { runs: [ ...execution.runs, ...runs ], state: 'waiting', updated: new Date() });
 
-
-  if(!version.steps[step + 1])
-    return await Execution.update(workflowId, { state: 'completed', updated: new Date() });
+  // If any of the task requests for a retry
+    // Create a Google Cloud Task with id as <workflowId>$<executionId>$step-<step>$retry-<retry+1>
+    await Execution.update(workflowId, executionId, { next: { step: step, retry: 1, scheduled: new Date() + response.eta }, state: 'waiting', updated: new Date() });
+  else if(version.steps[step + 1])
+    // Create a Google Cloud Task with id as <workflowId>$<executionId>$step-<step+1>
+    await Execution.update(workflowId, executionId, { next: { step: step+1, retry: 0, scheduled: new Date() }, state: 'waiting', updated: new Date() });
+  else
+    await Execution.update(workflowId, executionId, { state: 'completed', updated: new Date() });
   
-
-  // TODO:
-  // Create a Google Cloud Task with id as <workflowId>$<refId>$step-<step+1>
-  // Proceed only if the task is created successfully
-  // throw error otherwise
-
-
-  const next = { step: step+1, retry: 0, scheduled: new Date() };
-
 }
