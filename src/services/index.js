@@ -1,3 +1,4 @@
+const { update } = require("../models/execution");
 
 exports.createNewWorkflow = async (name, owner) => {
 
@@ -27,36 +28,65 @@ exports.updateWorkflow = async (workflowId, name, params, steps) => {
 
 }
 
-exports.executeWorkflow = async (workflowId, refId, params) => {
+exports.createExecution = async (workflowId, refId, params) => {
 
-  const version = Version.getLatest(workflowId);
+  const execution = await Execution.getLatestByRefId(workflowId, refId);
+  if(execution.state == 'queued' || execution.state == 'running' || execution.state == 'waiting')
+    return;
 
   // TODO: Create a Google Cloud Task with id as <workflowId>$<refId>
 
-  return await Execution.create(workflowId, refId, version.id, params);
-
 }
 
-exports.executeWorkflowStep = async (workflowId, refId, step, retry) => {
+exports.processExecution = async (workflowId, refId, step, retry) => {
 
-  let execution; // Get execution by workflowId and refId
+  const execution = await Execution.getLatestByRefId(workflowId, refId);
 
   if(!step) {
-    /*
-      - Create a Google Cloud Task with id as <workflowId>$<refId>$<step>
-      - Update execution with next step
-        next = { step: <first-step-name>, retry: 0, scheduled: new Date() };
-    */
+
+    assert(!execution || execution.state == 'completed' || execution.state == 'failed');
+  
+    const version = Version.getLatest(workflowId);
+
+    const data = {
+      refId: refId,
+      versionId: version.id,
+      params: params,
+      next: {
+        step: version.steps[0].name,
+        retry: 0,
+        scheduled: new Date()
+      },
+      runs: [],
+      state: 'queued',
+      created: new Date(),
+      updated: new Date()
+    }
+
+    // TODO: Create a Google Cloud Task with id as <workflowId>$<refId>$<version.steps[0].name>
+
+    return await Execution.create(workflowId, data);
+
+  } else if(step == execution.next.step && retry == execution.next.retry) {
+
+    const version = Version.get(workflowId, execution.versionId);
+    const tasks = version.steps.find(s => s.name == step).tasks;
+    const runs = tasks.map(t => ({ ...execution.next, task: t.name, started: new Date(), ended: null, response: null }));
+
+    await Execution.update(workflowId, { runs: [ ...execution.runs, ...runs ], state: 'running', updated: new Date() });
+
+    // TODO: Fetch tasks' url
+    // TODO: Update tasks' runs with ended and response
+
+    const next = { step: version.steps.find(s => s.name == step).next, retry: 0, scheduled: new Date() };
+    // TODO: Create a Google Cloud Task with id as <workflowId>$<refId>$<next.step>
+    await Execution.update(workflowId, { next, runs: [ ...execution.runs, ...runs ], state: 'waiting', updated: new Date() });
+
   } else {
-    /*
-      - Fetch tasks' url
-      - if task(s) are successfule, update execution with next step
-        next = { step: <next-step-name>, retry: 0, scheduled: new Date() };
-      - if one or more task(s) failed, throw error
-      - if one or more task request reschedule
-        Create a Google Cloud Task with id as <workflowId>$<refId>$<step>$<retry>
-        next = { step: <current-step-name>, retry: 1, scheduled: new Date() };
-    */
+
+    // Can not proceed
+    // Throw error
+
   }
 
 }
