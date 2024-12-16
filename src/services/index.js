@@ -36,7 +36,7 @@ exports.triggerWorkflow = async (workflowId, params) => {
       scheduled: new Date()
     },
     count: 0,
-    runs: [],
+    tasks: [],
     state: 'queued',
     created: new Date(),
     updated: new Date()
@@ -109,11 +109,11 @@ exports.processWorkflow = async (workflowId, executionId, count) => {
         response  : null
     }));
 
-    const updates = { runs: [ ...execution.runs, ...runs ], state: 'running', updated: new Date() };
+    const updates = { tasks: [ ...execution.runs, ...runs ], state: 'running', updated: new Date() };
     await Execution.update(workflowId, executionId, updates);
 
     // TODO: Fetch tasks' url
-    // TODO: Update tasks' runs with ended and response
+    // TODO: Update tasks with ended and response
 
     let nextRun = null; // Re-run requested by one or more task at a certain time
 
