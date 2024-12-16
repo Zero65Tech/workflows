@@ -35,6 +35,7 @@ exports.triggerWorkflow = async (workflowId, params) => {
       step: version.steps[0].name,
       scheduled: new Date()
     },
+    count: 0,
     runs: [],
     state: 'queued',
     created: new Date(),
@@ -50,7 +51,7 @@ exports.triggerWorkflow = async (workflowId, params) => {
 
 }
 
-exports.processWorkflow = async (workflowId, executionId, runCount) => {
+exports.processWorkflow = async (workflowId, executionId, count) => {
 
   /*
 
@@ -63,24 +64,34 @@ exports.processWorkflow = async (workflowId, executionId, runCount) => {
   2. Run is triggered more than once, one after completion of the other:
     - Case: Execution `state` is `completed` or `failed`
       - Won't do anything
-    - Case: Execution `state` is `running` or  `waiting`
-      - Won't do anything as Execution `count` will not match with the Run `runCount`
+    - Case: Execution `state` is `running` or `waiting`
+      - Won't do anything as Execution `count` will less than the Run `count`
     - Should happen very rarely
   3. Next Run is triggered before the current Run is completed:
-    - Execution is updated before the next Run is created, hence, no issues
+    - Execution `count` is updated before the next Run is created, hence, no issues
 
   Error Conditions:
   1. Run crashed before updating the Execution `count`:
     - Run will be re-tried
     - Will try to pick up from where it left
-  2. Run crashed before updating the Execution `count`:
+  2. Run crashed after updating the Execution `count`:
     - Run will be re-tried
-    - Shall create the next Run (if not already created)
+    - Shall create the next Run (if not already created) and return
 
   */
 
 
   const execution = await Execution.get(workflowId, executionId);
+  if(execution.state == 'completed' || execution.state == 'failed')
+    return;
+
+  if(count < execution.count) {
+    // TODO: Create next Run if not already created
+    return;
+  }
+
+  assert(execution.count == count);
+
   const version = Version.get(workflowId, execution.versionId);
   
   for(let s = version.steps.findIndex(step => step.name === execution.next.step); s < version.steps.length; s++) {
@@ -109,6 +120,7 @@ exports.processWorkflow = async (workflowId, executionId, runCount) => {
     updates.updated = new Date();
     if(nextRun) {
       updates['next.scheduled'] = new Date() + response.eta;
+      updates.count = count + 1;
       updates.state = 'waiting';
       await Execution.update(workflowId, executionId, updates);
       // Create a Google Cloud Task with id as <workflowId>$<executionId>$<runCount+1>
@@ -118,6 +130,7 @@ exports.processWorkflow = async (workflowId, executionId, runCount) => {
       await Execution.update(workflowId, executionId, updates);
     } else {
       updates.next = null;
+      updates.count = count + 1;
       updates.state = 'completed';
       await Execution.update(workflowId, executionId, updates);
     }

@@ -18,6 +18,7 @@ exports.add = Joi.object({
   versionId: Joi.string().required(),
   params: Joi.object().required(),
   next: nextField.required(),
+  count: Joi.number().integer().min(0).required(),
   runs: runsFiled.required(),
   state: Joi.string().valid('queued').required(),
   created: Joi.date().iso().required(),
@@ -26,6 +27,7 @@ exports.add = Joi.object({
 
 exports.update = Joi.object({
   next: nextField,
+  count: Joi.number().integer().min(0).required(),
   runs: runsFiled,
   state: Joi.string().valid('running', 'waiting', 'completed', 'failed'),
   updated: Joi.date().iso().required()
