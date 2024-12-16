@@ -2,13 +2,11 @@ const Joi = require('joi');
 
 const nextField = Joi.object({
   step: Joi.string().required(),
-  retry: Joi.integer().required(),
   scheduled: Joi.date().iso().required(),
 });
 
 const runsFiled = Joi.array().items(Joi.object({
   step: Joi.string().required(),
-  retry: Joi.integer().required(),
   scheduled: Joi.date().iso().required(),
   task: Joi.string().required(),
   started: Joi.date().iso().required(),
