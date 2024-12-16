@@ -32,7 +32,7 @@ exports.triggerWorkflow = async (workflowId, params) => {
     versionId: version.id,
     params: params,
     next: {
-      step: 0,
+      step: version.steps[0].name,
       scheduled: new Date()
     },
     runs: [],
@@ -50,12 +50,12 @@ exports.triggerWorkflow = async (workflowId, params) => {
 
 }
 
-exports.processWorkflow = async (workflowId, executionId, retry) => {
+exports.processWorkflow = async (workflowId, executionId, runCount) => {
 
   const execution = await Execution.get(workflowId, executionId);
   const version = Version.get(workflowId, execution.versionId);
   
-  for(let s = execution.next.step; s < version.steps.length; s++) {
+  for(let s = version.steps.findIndex(step => step.name === execution.next.step); s < version.steps.length; s++) {
 
     const step = version.steps[s];
     const tasks = step.tasks;
@@ -75,11 +75,13 @@ exports.processWorkflow = async (workflowId, executionId, retry) => {
     // TODO: Fetch tasks' url
     // TODO: Update tasks' runs with ended and response
 
-    await Execution.update(workflowId, executionId, { next: { step: s + 1 }, runs: [ ...execution.runs, ...runs ], updated: new Date() });
+    await Execution.update(workflowId, executionId, { runs: [ ...execution.runs, ...runs ], updated: new Date() });
 
-    // If any of the task requests for a retry {
-      await Execution.update(workflowId, executionId, { 'next.scheduled': new Date() + response.eta, state: 'waiting', updated: new Date() });
-      // Create a Google Cloud Task with id as <workflowId>$<executionId>$<retry+1>
+    let response = { eta: 0, wait: false };
+
+   if(response.eta) {
+      await Execution.update(workflowId, executionId, { next: { step: step.name, scheduled: new Date() + response.eta }, state: 'waiting', updated: new Date() });
+      // Create a Google Cloud Task with id as <workflowId>$<executionId>$<runCount+1>
       return;
     }
   
