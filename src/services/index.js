@@ -36,7 +36,7 @@ exports.triggerWorkflow = async (workflowId, params) => {
       scheduled: new Date()
     },
     runs: [],
-    state: 'waiting',
+    state: 'queued',
     created: new Date(),
     updated: new Date()
   }
@@ -70,23 +70,30 @@ exports.processWorkflow = async (workflowId, executionId, runCount) => {
         response  : null
     }));
 
-    await Execution.update(workflowId, executionId, { runs: [ ...execution.runs, ...runs ], updated: new Date() });
+    await Execution.update(workflowId, executionId, { runs: [ ...execution.runs, ...runs ], state: 'running', updated: new Date() });
 
     // TODO: Fetch tasks' url
     // TODO: Update tasks' runs with ended and response
 
-    await Execution.update(workflowId, executionId, { runs: [ ...execution.runs, ...runs ], updated: new Date() });
+    const updates = { runs: [ ...execution.runs, ...runs ], updated: new Date() };
 
     let response = { eta: 0, wait: false };
 
    if(response.eta) {
-      await Execution.update(workflowId, executionId, { next: { step: step.name, scheduled: new Date() + response.eta }, state: 'waiting', updated: new Date() });
+      updates['next.scheduled'] = new Date() + response.eta;
+      updates.state = 'waiting';
+      await Execution.update(workflowId, executionId, updates);
       // Create a Google Cloud Task with id as <workflowId>$<executionId>$<runCount+1>
       return;
+    } else if(version.steps[s + 1]) {
+      updates['next.step'] = step[s + 1].name;
+      await Execution.update(workflowId, executionId, updates);
+    } else {
+      updates.next = null;
+      updates.state = 'completed';
+      await Execution.update(workflowId, executionId, updates);
     }
   
   }
-  
-  await Execution.update(workflowId, executionId, { state: 'completed', updated: new Date() });
 
 }

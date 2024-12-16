@@ -19,7 +19,7 @@ exports.add = Joi.object({
   params: Joi.object().required(),
   next: nextField.required(),
   runs: runsFiled.required(),
-  state: Joi.string().valid('waiting').required(),
+  state: Joi.string().valid('queued').required(),
   created: Joi.date().iso().required(),
   updated: Joi.date().iso().required()
 }).required();
