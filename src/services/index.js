@@ -52,6 +52,34 @@ exports.triggerWorkflow = async (workflowId, params) => {
 
 exports.processWorkflow = async (workflowId, executionId, runCount) => {
 
+  /*
+
+  # Run == Google Cloud Task
+
+  Race Conditions:
+  1. Run is triggered more than once, parallely:
+    - Runs will overwrite each other's data
+    - Should happen rarely
+  2. Run is triggered more than once, one after completion of the other:
+    - Case: Execution `state` is `completed` or `failed`
+      - Won't do anything
+    - Case: Execution `state` is `running` or  `waiting`
+      - Won't do anything as Execution `count` will not match with the Run `runCount`
+    - Should happen very rarely
+  3. Next Run is triggered before the current Run is completed:
+    - Execution is updated before the next Run is created, hence, no issues
+
+  Error Conditions:
+  1. Run crashed before updating the Execution `count`:
+    - Run will be re-tried
+    - Will try to pick up from where it left
+  2. Run crashed before updating the Execution `count`:
+    - Run will be re-tried
+    - Shall create the next Run (if not already created)
+
+  */
+
+
   const execution = await Execution.get(workflowId, executionId);
   const version = Version.get(workflowId, execution.versionId);
   
