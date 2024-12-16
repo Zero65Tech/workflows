@@ -70,16 +70,16 @@ exports.processWorkflow = async (workflowId, executionId, runCount) => {
         response  : null
     }));
 
-    await Execution.update(workflowId, executionId, { runs: [ ...execution.runs, ...runs ], state: 'running', updated: new Date() });
+    const updates = { runs: [ ...execution.runs, ...runs ], state: 'running', updated: new Date() };
+    await Execution.update(workflowId, executionId, updates);
 
     // TODO: Fetch tasks' url
     // TODO: Update tasks' runs with ended and response
 
-    const updates = { runs: [ ...execution.runs, ...runs ], updated: new Date() };
+    let nextRun = null; // Re-run requested by one or more task at a certain time
 
-    let response = { eta: 0, wait: false };
-
-   if(response.eta) {
+    updates.updated = new Date();
+    if(nextRun) {
       updates['next.scheduled'] = new Date() + response.eta;
       updates.state = 'waiting';
       await Execution.update(workflowId, executionId, updates);
