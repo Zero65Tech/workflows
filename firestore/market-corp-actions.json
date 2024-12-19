@@ -2,7 +2,7 @@
     "params": [ "date" ],
     "steps": [
       {
-        "name": "download",
+        "name": "raw:fetch",
         "tasks": [
           {
             "name": "nse",
@@ -15,7 +15,7 @@
         ]
       },
       {
-        "name": "transform",
+        "name": "stage:transform",
         "tasks": [
           {
             "name": "nse",
@@ -28,7 +28,7 @@
         ]
       },
       {
-        "name": "aggregate",
+        "name": "stage:aggregate",
         "tasks": [
           {
             "name": "nse",
@@ -37,7 +37,7 @@
         ]
       },
       {
-        "name": "prepare",
+        "name": "ready:prepare",
         "tasks": [
           {
             "name": "nse",

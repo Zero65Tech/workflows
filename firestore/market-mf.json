@@ -2,7 +2,7 @@
   "params": [ "date" ],
   "steps": [
     {
-      "name": "downlod",
+      "name": "raw:fetch",
       "tasks": [
         {
           "name": "amf",
@@ -11,7 +11,7 @@
       ]
     },
     {
-      "name": "extract",
+      "name": "raw:extract",
       "tasks": [
         {
           "name": "amf",
@@ -20,7 +20,16 @@
       ]
     },
     {
-      "name": "prepare",
+      "name": "stage:transform",
+      "tasks": [
+        {
+          "name": "amf",
+          "url": "https://market.zero65.in/task/transform/bhavcopy/amf"
+        }
+      ]
+    },
+    {
+      "name": "ready:prepare",
       "tasks": [
         {
           "name": "prices",

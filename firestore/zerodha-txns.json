@@ -1,0 +1,32 @@
+{
+  "params": [ "portfolioId", "date" ],
+  "steps": [
+    {
+      "name": "raw:fetch",
+      "tasks": [
+        {
+          "name": "cash",
+          "url": "https://market.zero65.in/task/fetch/zerodha/txns"
+        }
+      ]
+    },
+    {
+      "name": "stage:transform",
+      "tasks": [
+        {
+          "name": "cash",
+          "url": "https://market.zero65.in/task/transform/txns/zerodha"
+        }
+      ]
+    },
+    {
+      "name": "ready:prepare",
+      "tasks": [
+        {
+          "name": "cash",
+          "url": "https://market.zero65.in/task/prepare/txns"
+        }
+      ]
+    }
+  ]
+}
