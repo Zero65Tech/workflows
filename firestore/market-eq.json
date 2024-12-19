@@ -15,7 +15,7 @@
       ]
     },
     {
-      "name": "extract",
+      "name": "transform",
       "tasks": [
         {
           "name": "nse",
@@ -28,7 +28,7 @@
       ]
     },
     {
-      "name": "merge",
+      "name": "aggregate",
       "tasks": [
         {
           "name": "both",

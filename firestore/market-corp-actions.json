@@ -1,0 +1,53 @@
+{
+    "params": [ "date" ],
+    "steps": [
+      {
+        "name": "download",
+        "tasks": [
+          {
+            "name": "nse",
+            "url": "https://market.zero65.in/task/fetch/nse/corp-actions"
+          },
+          {
+            "name": "bse",
+            "url": "https://market.zero65.in/task/fetch/bse/corp-actions"
+          }
+        ]
+      },
+      {
+        "name": "transform",
+        "tasks": [
+          {
+            "name": "nse",
+            "url": "https://market.zero65.in/task/transform/corp-actions/bse"
+          },
+          {
+            "name": "bse",
+            "url": "https://market.zero65.in/task/transform/corp-actions/nse"
+          }
+        ]
+      },
+      {
+        "name": "aggregate",
+        "tasks": [
+          {
+            "name": "nse",
+            "url": "https://market.zero65.in/task/transform/corp-actions/aggregate"
+          }
+        ]
+      },
+      {
+        "name": "prepare",
+        "tasks": [
+          {
+            "name": "nse",
+            "url": "https://market.zero65.in/task/prepare/corp-actions"
+          },
+          {
+            "name": "bse",
+            "url": "https://market.zero65.in/task/prepare/suspended-stocks"
+          }
+        ]
+      }
+    ]
+  }
