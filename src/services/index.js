@@ -102,12 +102,12 @@ class MainService {
 
       const step = version.steps[s];
 
-      // Task runs for the current step
-      let runs = execution.tasks.filter(task => task.step === step.name && task.response.code >= 200 && task.response.code <= 299);
-
       // Tasks that are yet to run
-      let tasks = step.tasks.filter(task => !runs.find(run => run.task === task.name));
-      runs = tasks.map(task => {
+      let tasks = step.tasks.filter(
+          task => !execution.tasks.find(
+              run => run.step === step.name && run.task === task.name && run.response.code == 200));
+      
+      const runs = tasks.map(task => {
         const run = {
           step      : step.name,
           task      : task.name,
@@ -120,53 +120,57 @@ class MainService {
         return run;
       });
 
+      for(const task of tasks)
+        axios.get(url, { params:JSON.parse(version.params) })
+            .then(response => { task.response = response; })
+            .catch(error => { console.error('Error:', error.message); });
+
       const updates = { tasks: [ ...execution.tasks, ...runs ], state: 'running', updated: new Date() };
       await Execution.update(workflowId, executionId, updates);
 
-      for(let task of tasks) {
-        new Promise(async (resolve, reject) => {
-          task.response = await axios.get(task.url, task.params);
-          resolve();
-        });
-      }
-
-      let response = { code: 200, data: null };
+      const responseCode = 200;
       while (tasks.length) {
         await new Promise(resolve => setTimeout(resolve, 100));
         for(let task of tasks) {
+
           if(!task.response)
             continue;
+
           if(task.run.ended)
             continue;
+
           task.run.ended = new Date();
-          if(task.response.code < response)
-            continue;
-          response.code = task.response.code;
-          response.data = task.response.data;
+          task.run.response = { code:task.response.code, data:task.response.data };
+
+          const updates = { tasks: [ ...execution.tasks, ...runs ], updated: new Date() };
+          await Execution.update(workflowId, executionId, updates);
+
+          responseCode = Math.max(responseCode, task.response.code);
+
         }
         tasks = tasks.filter(task => !task.run.ended);
       }
 
-      let nextRun = null; // Re-run requested by one or more task at a certain time
-
-      if(nextRun) {
-        const nexRun = execution.next.scheduled.getTime() / 1000 + response.minEta * 60;
+      if(response.code > 299) {
+        throw new Error(`Task ${task.name} failed with code ${response.code}`);
+      } else if(response.headers['Retry-After']) {
+        const nexRun = new Date(execution.next.scheduled.getTime() + response.headers['Retry-After'] * 60 * 1000);
         updates['next.scheduled'] = nexRun;
         updates['count']          = runCount + 1;
-        updates['tasks']          = [ ...execution.tasks, ...runs ];
+        // updates['tasks']          = [ ...execution.tasks, ...runs ];
         updates['state']          = 'waiting';
         updates['updated']        = new Date();
         await Execution.update(workflowId, executionId, updates);
         return this.cloudTasksService.createTask(workflowId, execution.id, nexRun, runCount + 1);
       } else if(version.steps[s + 1]) {
         updates['next.step']      = step[s + 1].name;
-        updates['tasks']          = [ ...execution.tasks, ...runs ];
+        // updates['tasks']          = [ ...execution.tasks, ...runs ];
         updates['updated']        = new Date();
         await Execution.update(workflowId, executionId, updates);
       } else {
         updates['next']           = null;
         updates['count']          = runCount + 1;
-        updates['tasks']          = [ ...execution.tasks, ...runs ];
+        // updates['tasks']          = [ ...execution.tasks, ...runs ];
         updates['state']          = 'completed';
         updates['updated']        = new Date();
         await Execution.update(workflowId, executionId, updates);
@@ -174,6 +178,6 @@ class MainService {
     
     } // for
 
-  }
+  } // processWorkflow
 
 }
