@@ -91,7 +91,7 @@ class MainService {
       return;
 
     if(runCount < execution.count)
-      return this.cloudTasksService.createTask(workflowId, execution.id, execution.next.scheduled, execution.count);
+      return this.cloudTasksService.createTask(workflowId, executionId, execution.next.scheduled, execution.count);
 
     assert.strictEqual(runCount, execution.count);
 
@@ -108,8 +108,7 @@ class MainService {
           task => !execution.tasks.find(
               run => run.step === step.name && run.task === task.name && run.response.code == 200));
       
-      // Task runs for the step
-      const runs = [];
+      // Runs for the tasks
       for(const task of tasks) {
         const run = {
           step      : step.name,
@@ -120,17 +119,17 @@ class MainService {
           response  : null
         };
         task.run = run;
-        runs.push(run);
+        execution.tasks.push(run);
       };
 
       // Hitting the task url with params
       for(const task of tasks)
-        axios.get(task.url, { params:version.params, validateStatus: () => true })
+        axios.get(task.url, { params: version.params, validateStatus: () => true })
             .then(response => { task.response = response; })
             .catch(error => { console.error('Error:', error.message); }); // TODO: Use logger
 
       // Updating the execution with the task runs (in progress)
-      const updates = { tasks: [ ...execution.tasks, ...runs ], state: 'running', updated: new Date() };
+      const updates = { tasks: execution.tasks, state: 'running', updated: new Date() };
       await Execution.update(workflowId, executionId, updates);
 
       const response = { code:200 };
@@ -145,10 +144,10 @@ class MainService {
             continue;
 
           task.run.ended = new Date();
-          task.run.response = { code:task.response.code, data:task.response.data };
+          task.run.response = { code: task.response.code, data: task.response.data };
 
           // Updating the execution task run (completed)
-          const updates = { tasks: [ ...execution.tasks, ...runs ], updated: new Date() };
+          const updates = { tasks: execution.tasks, updated: new Date() };
           await Execution.update(workflowId, executionId, updates);
 
           if(response.code < task.response.code)
@@ -163,23 +162,29 @@ class MainService {
       } else if(response.code >= 400) { // 400-499
         assert.ok(response.headers['Retry-After']);
         const nexRun = new Date(new Date().getTime() + response.headers['Retry-After'] * 1000);
-        updates['next.scheduled'] = nexRun;
-        updates['count']          = runCount + 1;
-        updates['state']          = 'waiting';
-        updates['updated']        = new Date();
+        const updates = {
+          'next.scheduled' : nexRun,
+          'count'          : runCount + 1,
+          'state'          : 'waiting',
+          'updated'        : new Date()
+        }
         await Execution.update(workflowId, executionId, updates);
-        return this.cloudTasksService.createTask(workflowId, execution.id, nexRun, runCount + 1);
+        return this.cloudTasksService.createTask(workflowId, executionId, nexRun, runCount + 1);
       } else if(response.code >= 300) { // 300-399
         assert.fail(); // TODO:
       } else if(version.steps[s + 1]) {
-        updates['next.step']      = step[s + 1].name;
-        updates['updated']        = new Date();
+        const updates = {
+          'next.step'      : step[s + 1].name,
+          'updated'        : new Date()
+        }
         await Execution.update(workflowId, executionId, updates);
       } else {
-        updates['next']           = null;
-        updates['count']          = runCount + 1;
-        updates['state']          = 'completed';
-        updates['updated']        = new Date();
+        const updates = {
+          'next'           : null,
+          'count'          : runCount + 1,
+          'state'          : 'completed',
+          'updated'        : new Date()
+        }
         await Execution.update(workflowId, executionId, updates);
       }
     
