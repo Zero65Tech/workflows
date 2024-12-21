@@ -1,6 +1,6 @@
 const assert = require('assert');
 
-class MainService {
+class WorkflowsService {
 
   constructor(cloudTasksService) {
     this.cloudTasksService = cloudTasksService;
