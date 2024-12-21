@@ -107,7 +107,8 @@ class MainService {
           task => !execution.tasks.find(
               run => run.step === step.name && run.task === task.name && run.response.code == 200));
       
-      const runs = tasks.map(task => {
+      const runs = [];
+      for(const task of tasks) {
         const run = {
           step      : step.name,
           task      : task.name,
@@ -117,18 +118,18 @@ class MainService {
           response  : null
         };
         task.run = run;
-        return run;
-      });
+        runs.push(run);
+      };
 
       for(const task of tasks)
-        axios.get(url, { params:JSON.parse(version.params) })
+        axios.get(url, { params:JSON.parse(version.params), validateStatus: () => true })
             .then(response => { task.response = response; })
-            .catch(error => { console.error('Error:', error.message); });
+            .catch(error => { console.error('Error:', error.message); }); // TODO: Use logger
 
       const updates = { tasks: [ ...execution.tasks, ...runs ], state: 'running', updated: new Date() };
       await Execution.update(workflowId, executionId, updates);
 
-      const responseCode = 200;
+      const response = { code:200 };
       while (tasks.length) {
         await new Promise(resolve => setTimeout(resolve, 100));
         for(let task of tasks) {
@@ -145,32 +146,33 @@ class MainService {
           const updates = { tasks: [ ...execution.tasks, ...runs ], updated: new Date() };
           await Execution.update(workflowId, executionId, updates);
 
-          responseCode = Math.max(responseCode, task.response.code);
+          if(response.code < task.response.code)
+            response = task.response;
 
         }
         tasks = tasks.filter(task => !task.run.ended);
       }
 
-      if(response.code > 299) {
+      if(response.code >= 500 || response.code < 200) { // 0-199 & 500-599
         throw new Error(`Task ${task.name} failed with code ${response.code}`);
-      } else if(response.headers['Retry-After']) {
+      } else if(response.code >= 400) { // 400-499
+        assert.ok(response.headers['Retry-After']);
         const nexRun = new Date(execution.next.scheduled.getTime() + response.headers['Retry-After'] * 60 * 1000);
         updates['next.scheduled'] = nexRun;
         updates['count']          = runCount + 1;
-        // updates['tasks']          = [ ...execution.tasks, ...runs ];
         updates['state']          = 'waiting';
         updates['updated']        = new Date();
         await Execution.update(workflowId, executionId, updates);
         return this.cloudTasksService.createTask(workflowId, execution.id, nexRun, runCount + 1);
+      } else if(response.code >= 300) { // 300-399
+        assert.fail();
       } else if(version.steps[s + 1]) {
         updates['next.step']      = step[s + 1].name;
-        // updates['tasks']          = [ ...execution.tasks, ...runs ];
         updates['updated']        = new Date();
         await Execution.update(workflowId, executionId, updates);
       } else {
         updates['next']           = null;
         updates['count']          = runCount + 1;
-        // updates['tasks']          = [ ...execution.tasks, ...runs ];
         updates['state']          = 'completed';
         updates['updated']        = new Date();
         await Execution.update(workflowId, executionId, updates);
