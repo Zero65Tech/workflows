@@ -33,7 +33,7 @@ class MainService {
 
   }
 
-  triggerWorkflow = async (workflowId, params) => {
+  triggerWorkflow = async (workflowId, params, scheduled) => {
 
     const version = Version.getLatest(workflowId);
 
@@ -42,7 +42,7 @@ class MainService {
       params: params,
       next: {
         step: version.steps[0].name,
-        scheduled: new Date()
+        scheduled: scheduled
       },
       count: 0,
       tasks: [],
@@ -92,7 +92,7 @@ class MainService {
       return;
 
     if(runCount < execution.count)
-      return this.cloudTasksService.createTask(workflowId, execution.id, execution.count);
+      return this.cloudTasksService.createTask(workflowId, execution.id, execution.next.scheduled, execution.count);
 
     assert.strictEqual(runCount, execution.count);
 
@@ -121,20 +121,24 @@ class MainService {
 
       let nextRun = null; // Re-run requested by one or more task at a certain time
 
-      updates.updated = new Date();
       if(nextRun) {
-        updates['next.scheduled'] = new Date() + response.eta;
-        updates.count = runCount + 1;
-        updates.state = 'waiting';
+        const scheduled = execution.next.scheduled.getTime() / 1000 + response.minEta * 60;
+        updates['next.scheduled'] = scheduled;
+        updates['count']          = runCount + 1;
+        updates['state']          = 'waiting';
+        updates['updated']        = new Date();
         await Execution.update(workflowId, executionId, updates);
-        return this.cloudTasksService.createTask(workflowId, execution.id, runCount + 1);
+        return this.cloudTasksService.createTask(workflowId, execution.id, scheduled, runCount + 1);
       } else if(version.steps[s + 1]) {
-        updates['next.step'] = step[s + 1].name;
+        updates['next.step']      = step[s + 1].name;
+        updates['updated']        = new Date();
         await Execution.update(workflowId, executionId, updates);
       } else {
-        updates.next = null;
-        updates.count = count + 1;
-        updates.state = 'completed';
+        updates['next.step']      = null;
+        updates['next.scheduled'] = null;
+        updates['count']          = runCount + 1;
+        updates['state']          = 'completed';
+        updates['updated']        = new Date();
         await Execution.update(workflowId, executionId, updates);
       }
     

@@ -5,12 +5,9 @@ const projectId = process.env.STAGE === 'prod' || process.env.STAGE === 'gamma'
     : 'zero65-test'; // beta & alpha
 const location = 'asia-south1';
 const queue = 'default';
-const hostName = 'https://workflows.zero65.in';
 
 const client = new CloudTasksClient();
+const hostName = 'https://workflows.zero65.in';
+const queuePath = client.queuePath(project, location, queue);
 
-module.exports = {
-  client,
-  queuePath: client.queuePath(project, location, queue),
-  hostName
-};
+module.exports = { client, queuePath, hostName };
