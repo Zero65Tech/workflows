@@ -101,48 +101,78 @@ class MainService {
     for(let s = version.steps.findIndex(step => step.name === execution.next.step); s < version.steps.length; s++) {
 
       const step = version.steps[s];
-      const tasks = step.tasks;
-      // TODO: filter out tasks that are already run based on execution
 
-      const runs = tasks.map(task => ({
+      // Task runs for the current step
+      let runs = execution.tasks.filter(task => task.step === step.name && task.response.code >= 200 && task.response.code <= 299);
+
+      // Tasks that are yet to run
+      let tasks = step.tasks.filter(task => !runs.find(run => run.task === task.name));
+      runs = tasks.map(task => {
+        const run = {
           step      : step.name,
           task      : task.name,
           scheduled : execution.next.scheduled,
           started   : new Date(),
           ended     : null,
           response  : null
-      }));
+        };
+        task.run = run;
+        return run;
+      });
 
-      const updates = { tasks: [ ...execution.runs, ...runs ], state: 'running', updated: new Date() };
+      const updates = { tasks: [ ...execution.tasks, ...runs ], state: 'running', updated: new Date() };
       await Execution.update(workflowId, executionId, updates);
 
-      // TODO: Fetch tasks' url
-      // TODO: Update tasks with ended and response
+      for(let task of tasks) {
+        new Promise(async (resolve, reject) => {
+          task.response = await axios.get(task.url, task.params);
+          resolve();
+        });
+      }
+
+      let response = { code: 200, data: null };
+      while (tasks.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        for(let task of tasks) {
+          if(!task.response)
+            continue;
+          if(task.run.ended)
+            continue;
+          task.run.ended = new Date();
+          if(task.response.code < response)
+            continue;
+          response.code = task.response.code;
+          response.data = task.response.data;
+        }
+        tasks = tasks.filter(task => !task.run.ended);
+      }
 
       let nextRun = null; // Re-run requested by one or more task at a certain time
 
       if(nextRun) {
-        const scheduled = execution.next.scheduled.getTime() / 1000 + response.minEta * 60;
-        updates['next.scheduled'] = scheduled;
+        const nexRun = execution.next.scheduled.getTime() / 1000 + response.minEta * 60;
+        updates['next.scheduled'] = nexRun;
         updates['count']          = runCount + 1;
+        updates['tasks']          = [ ...execution.tasks, ...runs ];
         updates['state']          = 'waiting';
         updates['updated']        = new Date();
         await Execution.update(workflowId, executionId, updates);
-        return this.cloudTasksService.createTask(workflowId, execution.id, scheduled, runCount + 1);
+        return this.cloudTasksService.createTask(workflowId, execution.id, nexRun, runCount + 1);
       } else if(version.steps[s + 1]) {
         updates['next.step']      = step[s + 1].name;
+        updates['tasks']          = [ ...execution.tasks, ...runs ];
         updates['updated']        = new Date();
         await Execution.update(workflowId, executionId, updates);
       } else {
-        updates['next.step']      = null;
-        updates['next.scheduled'] = null;
+        updates['next']           = null;
         updates['count']          = runCount + 1;
+        updates['tasks']          = [ ...execution.tasks, ...runs ];
         updates['state']          = 'completed';
         updates['updated']        = new Date();
         await Execution.update(workflowId, executionId, updates);
       }
     
-    }
+    } // for
 
   }
 
