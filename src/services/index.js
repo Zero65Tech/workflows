@@ -1,4 +1,4 @@
-const cloudTasks = require('../config/cloudTasks');
+const assert = require('assert');
 
 class MainService {
 
@@ -57,7 +57,7 @@ class MainService {
     
   }
 
-  processWorkflow = async (workflowId, executionId, count) => {
+  processWorkflow = async (workflowId, executionId, runCount) => {
 
     /*
 
@@ -71,7 +71,7 @@ class MainService {
       - Case: Execution `state` is `completed` or `failed`
         - Won't do anything
       - Case: Execution `state` is `running` or `waiting`
-        - Won't do anything as Execution `count` will less than the Run `count`
+        - Won't do anything as Execution `count` will less than the Run `runCount`
       - Should happen very rarely
     3. Next Run is triggered before the current Run is completed:
       - As execution `count` is updated before the next Run is created, hence, no issues
@@ -91,10 +91,10 @@ class MainService {
     if(execution.state == 'completed' || execution.state == 'failed')
       return;
 
-    if(count < execution.count)
-      return this.cloudTasksService.createTask(workflowId, execution.id);
+    if(runCount < execution.count)
+      return this.cloudTasksService.createTask(workflowId, execution.id, execution.count);
 
-    assert(execution.count == count);
+    assert.strictEqual(runCount, execution.count);
 
     const version = Version.get(workflowId, execution.versionId);
     
@@ -124,11 +124,10 @@ class MainService {
       updates.updated = new Date();
       if(nextRun) {
         updates['next.scheduled'] = new Date() + response.eta;
-        updates.count = count + 1;
+        updates.count = runCount + 1;
         updates.state = 'waiting';
         await Execution.update(workflowId, executionId, updates);
-        // Create a Google Cloud Task with id as <workflowId>$<executionId>$<runCount+1>
-        return;
+        return this.cloudTasksService.createTask(workflowId, execution.id, runCount + 1);
       } else if(version.steps[s + 1]) {
         updates['next.step'] = step[s + 1].name;
         await Execution.update(workflowId, executionId, updates);
