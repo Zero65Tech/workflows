@@ -1,7 +1,12 @@
+const cloudTasks = require('../config/cloudTasks');
+
+
+
 exports.createWorkflow = async (name, owner) => {
 
+  // Required for backfilling data from the firestore folder. TODO: Remove this after backfilling.
   const workflow = await Workflow.getLatestByNameAndOwner(name, owner);
-  if(workflow) // Required for backfilling data from firestore folder. TODO: Remove this after backfilling.
+  if(workflow)
     return workflow.id;
 
   const data = { name, owner, created: new Date(), updated: new Date() };
@@ -9,17 +14,17 @@ exports.createWorkflow = async (name, owner) => {
 
 }
   
-exports.updateWorkflow = async (workflowId, name, params, steps) => {
+exports.updateWorkflow = async (workflowId, versionName, params, steps) => {
 
-  const checksum = Utils.generateChecksum({ params: JSON.parse(params), steps: JSON.parse(steps) });
+  const checksum = Utils.generateChecksum(JSON.parse(steps));
 
   const version = Version.getLatestByChecksum(workflowId, checksum);
   if(version) {
-    const updates = { name, params, steps, updated: new Date() };
+    const updates = { name:versionName, params, steps, updated: new Date() };
     return (await Version.update(workflowId, version.id, updates)).id;
   }
 
-  const data = { name, params, steps, checksum, created: new Date(), updated: new Date() }
+  const data = { name:versionName, params, steps, checksum, created: new Date(), updated: new Date() }
   return await Version.create(workflowId, data);
 
 }
@@ -28,7 +33,7 @@ exports.triggerWorkflow = async (workflowId, params) => {
 
   const version = Version.getLatest(workflowId);
 
-  const data = {
+  const executionData = {
     versionId: version.id,
     params: params,
     next: {
@@ -42,13 +47,18 @@ exports.triggerWorkflow = async (workflowId, params) => {
     updated: new Date()
   }
 
-  const executionId = await Execution.create(workflowId, data);
+  const executionId = await Execution.create(workflowId, executionData);
 
-  // TODO:
-  // Create a Google Cloud Task with id as <workflowId>$<executionId>
-  // Proceed if the task is created successfully
-  // throw error otherwise
+  const taskData = {
+    name: `${cloudTasks.queuePath}/tasks/${workflowId}-${executionId}`,
+    httpRequest: {
+      httpMethod: 'GET',
+      url: `https://us-central1-<project-id>.cloudfunctions.net/${ workflowId }/${ executionId }`,
+    },
+  };
 
+  const [response] = await cloudTasks.client.createTask({ parent: cloudTasks.queuePath, task: taskData });
+  
 }
 
 exports.processWorkflow = async (workflowId, executionId, count) => {
