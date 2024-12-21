@@ -6,32 +6,32 @@ class MainService {
     this.cloudTasksService = cloudTasksService;
   }
 
-exports.createWorkflow = async (name, owner) => {
+  createWorkflow = async (name, owner) => {
 
-  // Required for backfilling data from the firestore folder. TODO: Remove this after backfilling.
-  const workflow = await Workflow.getLatestByNameAndOwner(name, owner);
-  if(workflow)
-    return workflow.id;
+    // Required for backfilling data from the firestore folder. TODO: Remove this after backfilling.
+    const workflow = await Workflow.getLatestByNameAndOwner(name, owner);
+    if(workflow)
+      return workflow.id;
 
-  const data = { name, owner, created: new Date(), updated: new Date() };
-  return await Workflow.create(data);
+    const data = { name, owner, created: new Date(), updated: new Date() };
+    return await Workflow.create(data);
 
-}
-  
-exports.updateWorkflow = async (workflowId, versionName, params, steps) => {
-
-  const checksum = Utils.generateChecksum(JSON.parse(steps));
-
-  const version = Version.getLatestByChecksum(workflowId, checksum);
-  if(version) {
-    const updates = { name:versionName, params, steps, updated: new Date() };
-    return (await Version.update(workflowId, version.id, updates)).id;
   }
+  
+  updateWorkflow = async (workflowId, versionName, params, steps) => {
 
-  const data = { name:versionName, params, steps, checksum, created: new Date(), updated: new Date() }
-  return await Version.create(workflowId, data);
+    const checksum = Utils.generateChecksum(JSON.parse(steps));
 
-}
+    const version = Version.getLatestByChecksum(workflowId, checksum);
+    if(version) {
+      const updates = { name:versionName, params, steps, updated: new Date() };
+      return (await Version.update(workflowId, version.id, updates)).id;
+    }
+
+    const data = { name:versionName, params, steps, checksum, created: new Date(), updated: new Date() }
+    return await Version.create(workflowId, data);
+
+  }
 
   triggerWorkflow = async (workflowId, params) => {
 
