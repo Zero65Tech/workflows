@@ -1,15 +1,10 @@
+const firestore = require('@google-cloud/firestore');
 
-const config = {
-  development: {
-    projectId: 'zero65-test',
-    collection: 'WORKFLOW'
-  },
-  production: {
-    projectId: 'zero65-workflows',
-    collection: 'WORKFLOW'
-  }
-}
+const projectId = process.env.STAGE === 'prod' || process.env.STAGE === 'gamma'
+    ? 'zero65-workflows'
+    : 'zero65-test'; // beta & alpha
 
-module.exports = process.env.STAGE === 'prod' || process.env.STAGE === 'gamma'
-  ? config.production
-  : config.development; // beta & alpha
+const client = new firestore.Firestore({ projectId: Config.projectId });
+const collectionName = 'WORKFLOW';
+    
+module.exports = { client, collectionName };

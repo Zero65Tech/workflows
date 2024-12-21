@@ -1,20 +1,18 @@
-const firestore = require('@google-cloud/firestore');
+const { client, collectionName } = require('../config/firestore');
+const model = require('../models/execution');
 
-const Config = require('../config/firestore');
-const Firestore = new firestore.Firestore({ projectId: Config.projectId });
-const Collection = Firestore.collection(Config.collection);
-
-const workflowModel = require('../models/workflow');
+const collection = client.collection(collectionName);
 
 function toData(doc) {
   const data = { id: doc.id, ...doc.data() };
   data.created = data.created.toDate();
+  data.updated = data.updated.toDate();
   return data;
 }
 
-exports.findOneByNameAndOwner = async (name, owner) => { // Needed for back-filling data from GitHub repository
+exports.findLatestByNameAndOwner = async (name, owner) => {
 
-  const query = Collection
+  const query = collection
       .where('name', '==', name)
       .where('owner', '==', owner);
   
@@ -22,15 +20,14 @@ exports.findOneByNameAndOwner = async (name, owner) => { // Needed for back-fill
   if(snap.empty)
     return null;
   
-  const docs = snap.docs.map(toData);
-  docs.sort((a, b) => b.created - a.created);
+  docs.sort((a, b) => b.updated - a.updated);
 
-  return docs[0];
+  return toData(docs[0]);
 
 }
 
 exports.add = async (data) => {
-  await workflowModel.add.validateAsync(data);
-  const ref = await Collection.add(data);
+  await model.add.validateAsync(data);
+  const ref = await collection.add(data);
   return ref.id;
 }
