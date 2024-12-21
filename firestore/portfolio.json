@@ -1,0 +1,31 @@
+{
+    "params": [ "date" ],
+    "steps": [
+      {
+        "name": "ready:organize",
+        "tasks": [
+          {
+            "name": "nse",
+            "url": "https://portfolio.zero65.in/task/update/funds"
+          },
+          {
+            "name": "nse",
+            "url": "https://portfolio.zero65.in/task/update/organized"
+          }
+        ]
+      },
+      {
+        "name": "ready:pnl",
+        "tasks": [
+          {
+            "name": "holdings",
+            "url": "https://portfolio.zero65.in/task/update/holdings"
+          },
+          {
+            "name": "pnl",
+            "url": "https://portfolio.zero65.in/task/update/pnl"
+          }
+        ]
+      }
+    ]
+}
