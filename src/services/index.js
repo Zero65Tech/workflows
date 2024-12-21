@@ -71,10 +71,10 @@ class MainService {
       - Case: Execution `state` is `completed` or `failed`
         - Won't do anything
       - Case: Execution `state` is `running` or `waiting`
-        - Won't do anything as Execution `count` will less than the Run `runCount`
+        - Won't do anything as `runCount` would be less than Execution `count`
       - Should happen very rarely
     3. Next Run is triggered before the current Run is completed:
-      - As execution `count` is updated before the next Run is created, hence, no issues
+      - Execution `count` is updated before the next Run is created, hence, no issues
 
     Error Conditions:
     1. Run crashed before updating the Execution `count`:
@@ -86,7 +86,6 @@ class MainService {
 
     */
 
-
     const execution = await Execution.get(workflowId, executionId);
     if(execution.state == 'completed' || execution.state == 'failed')
       return;
@@ -97,6 +96,8 @@ class MainService {
     assert.strictEqual(runCount, execution.count);
 
     const version = Version.get(workflowId, execution.versionId);
+    version.params = JSON.parse(version.params);
+    version.steps = JSON.parse(version.steps);
     
     for(let s = version.steps.findIndex(step => step.name === execution.next.step); s < version.steps.length; s++) {
 
@@ -107,6 +108,7 @@ class MainService {
           task => !execution.tasks.find(
               run => run.step === step.name && run.task === task.name && run.response.code == 200));
       
+      // Task runs for the step
       const runs = [];
       for(const task of tasks) {
         const run = {
@@ -121,11 +123,13 @@ class MainService {
         runs.push(run);
       };
 
+      // Hitting the task url with params
       for(const task of tasks)
-        axios.get(url, { params:JSON.parse(version.params), validateStatus: () => true })
+        axios.get(task.url, { params:version.params, validateStatus: () => true })
             .then(response => { task.response = response; })
             .catch(error => { console.error('Error:', error.message); }); // TODO: Use logger
 
+      // Updating the execution with the task runs (in progress)
       const updates = { tasks: [ ...execution.tasks, ...runs ], state: 'running', updated: new Date() };
       await Execution.update(workflowId, executionId, updates);
 
@@ -143,6 +147,7 @@ class MainService {
           task.run.ended = new Date();
           task.run.response = { code:task.response.code, data:task.response.data };
 
+          // Updating the execution task run (completed)
           const updates = { tasks: [ ...execution.tasks, ...runs ], updated: new Date() };
           await Execution.update(workflowId, executionId, updates);
 
@@ -154,10 +159,10 @@ class MainService {
       }
 
       if(response.code >= 500 || response.code < 200) { // 0-199 & 500-599
-        throw new Error(`Task ${task.name} failed with code ${response.code}`);
+        throw new Error(`Task ${task.name} failed with code ${response.code}`); // TODO:
       } else if(response.code >= 400) { // 400-499
         assert.ok(response.headers['Retry-After']);
-        const nexRun = new Date(execution.next.scheduled.getTime() + response.headers['Retry-After'] * 60 * 1000);
+        const nexRun = new Date(new Date().getTime() + response.headers['Retry-After'] * 1000);
         updates['next.scheduled'] = nexRun;
         updates['count']          = runCount + 1;
         updates['state']          = 'waiting';
@@ -165,7 +170,7 @@ class MainService {
         await Execution.update(workflowId, executionId, updates);
         return this.cloudTasksService.createTask(workflowId, execution.id, nexRun, runCount + 1);
       } else if(response.code >= 300) { // 300-399
-        assert.fail();
+        assert.fail(); // TODO:
       } else if(version.steps[s + 1]) {
         updates['next.step']      = step[s + 1].name;
         updates['updated']        = new Date();
