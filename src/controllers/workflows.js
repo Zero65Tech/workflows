@@ -32,3 +32,5 @@ class WorkflowsController {
   };
 
 }
+
+module.exports = WorkflowsController;

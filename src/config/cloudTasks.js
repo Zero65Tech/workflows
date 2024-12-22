@@ -8,6 +8,6 @@ const queue = 'default';
 
 const client = new CloudTasksClient();
 const hostName = 'https://workflows.zero65.in';
-const queuePath = client.queuePath(project, location, queue);
+const queuePath = client.queuePath(projectId, location, queue);
 
 module.exports = { client, queuePath, hostName };

@@ -23,3 +23,5 @@ class CloudTasksService {
   }
 
 }
+
+module.exports = CloudTasksService;

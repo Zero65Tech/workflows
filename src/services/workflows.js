@@ -196,3 +196,5 @@ class WorkflowsService {
   } // processWorkflow
 
 }
+
+module.exports = WorkflowsService;
