@@ -20,7 +20,7 @@ class WorkflowsService {
     return await this.workflowDao.create(data);
 
   }
-  
+
   updateWorkflow = async (workflowId, versionName, params, steps) => {
 
     const checksum = utils.generateChecksum(JSON.parse(steps));
@@ -57,7 +57,7 @@ class WorkflowsService {
     const executionId = await this.executionDao.create(workflowId, executionData);
 
     await this.cloudTasksService.createTask(workflowId, executionId);
-    
+
   }
 
   processWorkflow = async (workflowId, executionId, runCount) => {
@@ -101,7 +101,7 @@ class WorkflowsService {
     const version = this.versionDao.get(workflowId, execution.versionId);
     version.params = JSON.parse(version.params);
     version.steps = JSON.parse(version.steps);
-    
+
     for(let s = version.steps.findIndex(step => step.name === execution.next.step); s < version.steps.length; s++) {
 
       const step = version.steps[s];
@@ -110,7 +110,7 @@ class WorkflowsService {
       let tasks = step.tasks.filter(
           task => !execution.tasks.find(
               run => run.step === step.name && run.task === task.name && run.response.code == 200));
-      
+
       // Runs for the tasks
       for(const task of tasks) {
         const run = {
@@ -190,7 +190,7 @@ class WorkflowsService {
         }
         await this.executionDao.update(workflowId, executionId, updates);
       }
-    
+
     } // for
 
   } // processWorkflow

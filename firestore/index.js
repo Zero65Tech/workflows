@@ -31,7 +31,7 @@ const workflows = [
       steps: JSON.stringify(steps),
       checksum
     });
-    
+
     console.log(`Added version ${versionId} for workflow ${name}`);
 
   }

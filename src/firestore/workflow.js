@@ -15,11 +15,11 @@ exports.findLatestByNameAndOwner = async (name, owner) => {
   const query = collection
       .where('name', '==', name)
       .where('owner', '==', owner);
-  
+
   const snap = await query.get();
   if(snap.empty)
     return null;
-  
+
   const docs = snap.docs.map(toData);
   docs.sort((a, b) => b.updated - a.updated);
 

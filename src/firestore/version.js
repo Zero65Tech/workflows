@@ -15,11 +15,11 @@ exports.findLatestByChecksum = async (workflowId, checksum) => {
   const query = collection.doc(workflowId)
       .collection('VERSION')
       .where('checksum', '==', checksum);
-  
+
   const snap = await query.get();
   if(snap.empty)
     return null;
-  
+
   const docs = snap.docs.map(toData);
   docs.sort((a, b) => b.created - a.created);
 
