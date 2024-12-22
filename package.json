@@ -2,7 +2,7 @@
   "author": "Prashant Gupta @ Zero65 Technologies Pvt. Ltd.",
   "name": "workflows",
   "version": "1.4.0",
-  "description": "Workflows",
+  "description": "Workflows Service",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -14,19 +14,16 @@
   "dependencies": {
     "@google-cloud/firestore": "7.11.x",
     "@google-cloud/tasks": "5.5.x",
-    "@zero65tech/log": "4.0.x",
     "crypto": "1.0.x",
     "express": "4.21.x",
     "google-auth-library": "9.15.x",
     "joi": "17.13.x",
-    "json-stable-stringify": "1.1.x",
-    "lodash": "4.17.x"
+    "json-stable-stringify": "1.1.x"
   },
   "devDependencies": {
     "@zero65tech/eslint-config": "2.0.x",
     "eslint": "8.54.x",
-    "jest": "29.7.x",
-    "supertest": "6.3.x"
+    "jest": "29.7.x"
   },
   "eslintConfig": {
     "extends": "@zero65tech"
