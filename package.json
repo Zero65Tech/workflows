@@ -21,9 +21,10 @@
     "json-stable-stringify": "1.1.x"
   },
   "devDependencies": {
-    "@zero65tech/eslint-config": "2.0.x",
-    "eslint": "8.54.x",
-    "jest": "29.7.x"
+    "@zero65tech/eslint-config": "latest",
+    "eslint": "latest",
+    "jest": "latest",
+    "nodemon": "latest"
   },
   "eslintConfig": {
     "extends": "@zero65tech"

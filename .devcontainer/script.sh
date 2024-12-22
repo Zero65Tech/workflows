@@ -9,6 +9,4 @@ elif [ -n "$GOOGLE_APPLICATION_CREDENTIALS_JSON" ]; then
     echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > ~/.config/gcloud/application_default_credentials.json
 fi
 
-npm install -g google-artifactregistry-auth nodemon
-
-npx google-artifactregistry-auth && npm update && npm run dev
+npm update && npm run dev
