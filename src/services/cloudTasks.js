@@ -18,7 +18,7 @@ class CloudTasksService {
 
     const taskConfig = { name, httpRequest: { httpMethod: 'GET', url }, scheduleTime };
 
-    const [createdTask] = await client.createTask({ parent: queuePath, task: taskConfig });
+    return await client.createTask({ parent: queuePath, task: taskConfig });
 
   }
 

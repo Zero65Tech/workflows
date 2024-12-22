@@ -17,6 +17,7 @@
     "@zero65tech/log": "4.0.x",
     "crypto": "1.0.x",
     "express": "4.21.x",
+    "google-auth-library": "9.15.x",
     "joi": "17.13.x",
     "json-stable-stringify": "1.1.x",
     "lodash": "4.17.x"

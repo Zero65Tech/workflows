@@ -127,7 +127,7 @@ class WorkflowsService {
 
       // Hitting the task url with params
       for(const task of tasks)
-        axios.get(task.url, { params: version.params, validateStatus: () => true })
+        utils.doHttpGet(task.url, version.params)
             .then(response => { task.response = response; })
             .catch(error => { console.error('Error:', error.message); }); // TODO: Use logger
 
