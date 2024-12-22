@@ -1,4 +1,3 @@
-process.env.ENV   = process.env.ENV   || 'local';
 process.env.STAGE = process.env.STAGE || 'alpha';
 process.env.PORT  = process.env.PORT  || 8080;
 

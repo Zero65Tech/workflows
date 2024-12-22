@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
+// Environment Variables
+process.env.STAGE = process.env.STAGE || 'alpha';
+
 // Services
 const CloudTasksService = require('../src/services/cloudTasks');
 const WorkflowsService  = require('../src/services/workflows');

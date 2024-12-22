@@ -28,7 +28,8 @@ class WorkflowsService {
     const version = await this.versionDao.getLatestByChecksum(workflowId, checksum);
     if(version) {
       const updates = { name:versionName, params, steps, updated: new Date() };
-      return (await this.versionDao.update(workflowId, version.id, updates)).id;
+      await this.versionDao.update(workflowId, version.id, updates);
+      return version.id;
     }
 
     const data = { name:versionName, params, steps, checksum, created: new Date(), updated: new Date() }
