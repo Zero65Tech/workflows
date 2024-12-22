@@ -10,7 +10,7 @@ function toData(doc) {
   return data;
 }
 
-exports.findLatestByChecksum = async (workflowId, checksum) => {
+exports.getLatestByChecksum = async (workflowId, checksum) => {
 
   const query = collection.doc(workflowId)
       .collection('VERSION')
@@ -31,4 +31,9 @@ exports.add = async (workflowId, data) => {
   await model.add.validateAsync(data);
   const ref = await collection.doc(workflowId).collection('VERSION').add(data);
   return ref.id;
+}
+
+exports.update = async (workflowId, versionId, updates) => {
+  await model.update.validateAsync(updates);
+  await collection.doc(workflowId).collection('VERSION').doc(versionId).update(updates);
 }

@@ -17,7 +17,7 @@ class WorkflowsService {
       return workflow.id;
 
     const data = { name, owner, created: new Date(), updated: new Date() };
-    return await this.workflowDao.create(data);
+    return await this.workflowDao.add(data);
 
   }
 
@@ -25,14 +25,14 @@ class WorkflowsService {
 
     const checksum = utils.generateChecksum(JSON.parse(steps));
 
-    const version = this.versionDao.getLatestByChecksum(workflowId, checksum);
+    const version = await this.versionDao.getLatestByChecksum(workflowId, checksum);
     if(version) {
       const updates = { name:versionName, params, steps, updated: new Date() };
       return (await this.versionDao.update(workflowId, version.id, updates)).id;
     }
 
     const data = { name:versionName, params, steps, checksum, created: new Date(), updated: new Date() }
-    return await this.versionDao.create(workflowId, data);
+    return await this.versionDao.add(workflowId, data);
 
   }
 

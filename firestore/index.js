@@ -1,38 +1,38 @@
-const workflowService = require("../src/services/workflow");
-const versionService = require("../src/services/version");
-const { generateChecksum } = require("../src/utils");
+const fs = require('fs');
+const path = require('path');
 
+// Services
+const CloudTasksService = require('../src/services/cloudTasks');
+const WorkflowsService  = require('../src/services/workflows');
+
+// DAOs
+const workflowDao  = require('../src/firestore/workflow');
+const versionDao   = require('../src/firestore/version');
+const executionDao = require('../src/firestore/execution');
+
+// Dependency Injection
+const cloudTasksService = new CloudTasksService();
+const workflowsService  = new WorkflowsService(workflowDao, versionDao, executionDao, cloudTasksService);
+
+// Workflows' Data
 const owner = 'zero65';
-const workflows = [
-  'market-mf',
-  'market-eq',
-  'market-fo',
-  'zerodha-trades'
-];
+const workflows = fs.readdirSync(__dirname)
+    .filter(file => path.extname(file) === '.json')
+    .map(file => path.basename(file, '.json'));
 
 (async () => {
 
   for(const name of workflows) {
 
-    const workflow = await workflowService.getByNameAndOwner(name, owner);
-    const workflowId = workflow
-      ? workflow.id
-      : await workflowService.add({ name, owner });
+    console.log(name);
 
-    const { params, steps } = require(`./${name}.json`);
-    const checksum = generateChecksum({ params, steps });
+    const workflowId = await workflowsService.createWorkflow(name, owner);
 
-    const version = await versionService.getByChecksum(workflowId, checksum);
-    if(version)
-      continue;
+    let { params, steps } = require(`./${name}.json`);
+    params = JSON.stringify(params);
+    steps = JSON.stringify(steps);
 
-    const versionId = await versionService.add(workflowId, {
-      params: JSON.stringify(params),
-      steps: JSON.stringify(steps),
-      checksum
-    });
-
-    console.log(`Added version ${versionId} for workflow ${name}`);
+    await workflowsService.updateWorkflow(workflowId, null, params, steps);
 
   }
 

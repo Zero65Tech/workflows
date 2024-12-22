@@ -1,5 +1,5 @@
 const { client, collectionName } = require('../config/firestore');
-const model = require('../models/execution');
+const model = require('../models/workflow');
 
 const collection = client.collection(collectionName);
 
@@ -10,7 +10,7 @@ function toData(doc) {
   return data;
 }
 
-exports.findLatestByNameAndOwner = async (name, owner) => {
+exports.getLatestByNameAndOwner = async (name, owner) => {
 
   const query = collection
       .where('name', '==', name)
