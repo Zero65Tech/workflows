@@ -123,7 +123,7 @@ class WorkflowsService {
         };
         task.run = run;
         execution.tasks.push(run);
-      };
+      }
 
       // Hitting the task url with params
       for(const task of tasks)
@@ -135,8 +135,8 @@ class WorkflowsService {
       const updates = { tasks: execution.tasks, state: 'running', updated: new Date() };
       await this.executionDao.update(workflowId, executionId, updates);
 
-      const response = { code:200 };
-      while (tasks.length) {
+      let response = { code:200 };
+      while(tasks.length) {
         await new Promise(resolve => setTimeout(resolve, 100));
         for(let task of tasks) {
 
@@ -161,7 +161,7 @@ class WorkflowsService {
       }
 
       if(response.code >= 500 || response.code < 200) { // 0-199 & 500-599
-        throw new Error(`Task ${task.name} failed with code ${response.code}`); // TODO:
+        throw new Error(`Task ${step.name} failed with code ${response.code}`); // TODO:
       } else if(response.code >= 400) { // 400-499
         assert.ok(response.headers['Retry-After']);
         const nexRun = new Date(new Date().getTime() + response.headers['Retry-After'] * 1000);

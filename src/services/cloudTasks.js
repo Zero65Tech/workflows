@@ -4,7 +4,7 @@ class CloudTasksService {
 
   async createTask(workflowId, executionId, timestamp, runCount) {
 
-    const name = `${queuePath}/tasks/${taskName}` + (runCount
+    const name = `${queuePath}/tasks/` + (runCount
         ? `${workflowId}-${executionId}-${runCount}`
         : `${workflowId}-${executionId}`);
 

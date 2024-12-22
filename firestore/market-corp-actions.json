@@ -1,53 +1,53 @@
 {
-    "params": [ "date" ],
-    "steps": [
-      {
-        "name": "raw:fetch",
-        "tasks": [
-          {
-            "name": "nse",
-            "url": "https://market.zero65.in/task/fetch/nse/corp-actions"
-          },
-          {
-            "name": "bse",
-            "url": "https://market.zero65.in/task/fetch/bse/corp-actions"
-          }
-        ]
-      },
-      {
-        "name": "stage:transform",
-        "tasks": [
-          {
-            "name": "nse",
-            "url": "https://market.zero65.in/task/transform/corp-actions/bse"
-          },
-          {
-            "name": "bse",
-            "url": "https://market.zero65.in/task/transform/corp-actions/nse"
-          }
-        ]
-      },
-      {
-        "name": "stage:aggregate",
-        "tasks": [
-          {
-            "name": "nse",
-            "url": "https://market.zero65.in/task/transform/corp-actions/aggregate"
-          }
-        ]
-      },
-      {
-        "name": "ready:prepare",
-        "tasks": [
-          {
-            "name": "nse",
-            "url": "https://market.zero65.in/task/prepare/corp-actions"
-          },
-          {
-            "name": "bse",
-            "url": "https://market.zero65.in/task/prepare/suspended-stocks"
-          }
-        ]
-      }
-    ]
-  }
+  "params": [ "date" ],
+  "steps": [
+    {
+      "name": "raw:fetch",
+      "tasks": [
+        {
+          "name": "nse",
+          "url": "https://market.zero65.in/task/fetch/nse/corp-actions"
+        },
+        {
+          "name": "bse",
+          "url": "https://market.zero65.in/task/fetch/bse/corp-actions"
+        }
+      ]
+    },
+    {
+      "name": "stage:transform",
+      "tasks": [
+        {
+          "name": "nse",
+          "url": "https://market.zero65.in/task/transform/corp-actions/bse"
+        },
+        {
+          "name": "bse",
+          "url": "https://market.zero65.in/task/transform/corp-actions/nse"
+        }
+      ]
+    },
+    {
+      "name": "stage:aggregate",
+      "tasks": [
+        {
+          "name": "nse",
+          "url": "https://market.zero65.in/task/transform/corp-actions/aggregate"
+        }
+      ]
+    },
+    {
+      "name": "ready:prepare",
+      "tasks": [
+        {
+          "name": "nse",
+          "url": "https://market.zero65.in/task/prepare/corp-actions"
+        },
+        {
+          "name": "bse",
+          "url": "https://market.zero65.in/task/prepare/suspended-stocks"
+        }
+      ]
+    }
+  ]
+}

@@ -21,7 +21,6 @@ class WorkflowsController {
     const { workflowId } = req.params;
     const { params, scheduled } = req.body;
     const executionId = this.workflowService.triggerWorkflow(workflowId, params, scheduled);
-    await entityService.update(id, updates);
     res.send({ executionId });
   };
 

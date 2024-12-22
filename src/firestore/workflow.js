@@ -20,9 +20,10 @@ exports.findLatestByNameAndOwner = async (name, owner) => {
   if(snap.empty)
     return null;
   
+  const docs = snap.docs.map(toData);
   docs.sort((a, b) => b.updated - a.updated);
 
-  return toData(docs[0]);
+  return docs[0];
 
 }
 

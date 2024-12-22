@@ -20,9 +20,10 @@ exports.findLatestByChecksum = async (workflowId, checksum) => {
   if(snap.empty)
     return null;
   
+  const docs = snap.docs.map(toData);
   docs.sort((a, b) => b.created - a.created);
 
-  return toData(docs[0]);
+  return docs[0];
 
 }
 
