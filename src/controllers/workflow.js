@@ -1,24 +1,34 @@
-const entityService = require('../services/workflow');
+class WorkflowsController {
 
-exports.list = async (req, res) => {
-  const list = await entityService.list();
-  res.send(list);
-};
+  constructor(workflowService) {
+    this.workflowService = workflowService;
+  }
 
-exports.add = async (req, res) => {
-  const data = req.body;
-  const id = await entityService.add(data);
-  res.send({ id });
-};
+  createWorkflow = async (req, res) => {
+    const { name, owner } = req.body;
+    const workflowId = this.workflowService.createWorkflow(name, owner);
+    res.send({ workflowId });
+  };
 
-exports.update = async (req, res) => {
-  const { id, ...updates } = req.body;
-  await entityService.update(id, updates);
-  res.sendStatus(204);
-};
+  updateWorkflow = async (req, res) => {
+    const { workflowId } = req.params;
+    const { versionName, params, steps } = req.body;
+    const versionId = this.workflowService.updateWorflow(workflowId, versionName, params, steps);
+    res.send({ versionId });
+  };
 
-exports.delete = async (req, res) => {
-  const { id } = req.body;
-  await entityService.delete(id);
-  res.sendStatus(204);
-};
+  triggerWorkflow = async (req, res) => {
+    const { workflowId } = req.params;
+    const { params, scheduled } = req.body;
+    const executionId = this.workflowService.triggerWorkflow(workflowId, params, scheduled);
+    await entityService.update(id, updates);
+    res.send({ executionId });
+  };
+
+  processWorkflow = async (req, res) => {
+    const { workflowId, executionId, runCount } = req.params;
+    this.workflowService.processWorkflow(workflowId, executionId, runCount);
+    res.sendStatus(204);
+  };
+
+}

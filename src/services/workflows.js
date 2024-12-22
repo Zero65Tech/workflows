@@ -1,41 +1,44 @@
 const assert = require('assert');
+const utils = require('../utils');
 
 class WorkflowsService {
 
-  constructor(cloudTasksService) {
+  constructor(workflowDao, versionDao, executionDao, cloudTasksService) {
+    this.workflowDao = workflowDao;
+    this.versionDao = versionDao;
+    this.executionDao = executionDao;
     this.cloudTasksService = cloudTasksService;
   }
 
   createWorkflow = async (name, owner) => {
 
-    // Required for backfilling data from the firestore folder. TODO: Remove this after backfilling.
-    const workflow = await Workflow.getLatestByNameAndOwner(name, owner);
+    const workflow = await this.workflowDao.getLatestByNameAndOwner(name, owner);
     if(workflow)
       return workflow.id;
 
     const data = { name, owner, created: new Date(), updated: new Date() };
-    return await Workflow.create(data);
+    return await this.workflowDao.create(data);
 
   }
   
   updateWorkflow = async (workflowId, versionName, params, steps) => {
 
-    const checksum = Utils.generateChecksum(JSON.parse(steps));
+    const checksum = utils.generateChecksum(JSON.parse(steps));
 
-    const version = Version.getLatestByChecksum(workflowId, checksum);
+    const version = this.versionDao.getLatestByChecksum(workflowId, checksum);
     if(version) {
       const updates = { name:versionName, params, steps, updated: new Date() };
-      return (await Version.update(workflowId, version.id, updates)).id;
+      return (await this.versionDao.update(workflowId, version.id, updates)).id;
     }
 
     const data = { name:versionName, params, steps, checksum, created: new Date(), updated: new Date() }
-    return await Version.create(workflowId, data);
+    return await this.versionDao.create(workflowId, data);
 
   }
 
   triggerWorkflow = async (workflowId, params, scheduled) => {
 
-    const version = Version.getLatest(workflowId);
+    const version = this.versionDao.getLatest(workflowId);
 
     const executionData = {
       versionId: version.id,
@@ -51,7 +54,7 @@ class WorkflowsService {
       updated: new Date()
     }
 
-    const executionId = await Execution.create(workflowId, executionData);
+    const executionId = await this.executionDao.create(workflowId, executionData);
 
     await this.cloudTasksService.createTask(workflowId, executionId);
     
@@ -86,7 +89,7 @@ class WorkflowsService {
 
     */
 
-    const execution = await Execution.get(workflowId, executionId);
+    const execution = await this.executionDao.get(workflowId, executionId);
     if(execution.state == 'completed' || execution.state == 'failed')
       return;
 
@@ -95,7 +98,7 @@ class WorkflowsService {
 
     assert.strictEqual(runCount, execution.count);
 
-    const version = Version.get(workflowId, execution.versionId);
+    const version = this.versionDao.get(workflowId, execution.versionId);
     version.params = JSON.parse(version.params);
     version.steps = JSON.parse(version.steps);
     
@@ -130,7 +133,7 @@ class WorkflowsService {
 
       // Updating the execution with the task runs (in progress)
       const updates = { tasks: execution.tasks, state: 'running', updated: new Date() };
-      await Execution.update(workflowId, executionId, updates);
+      await this.executionDao.update(workflowId, executionId, updates);
 
       const response = { code:200 };
       while (tasks.length) {
@@ -148,7 +151,7 @@ class WorkflowsService {
 
           // Updating the execution task run (completed)
           const updates = { tasks: execution.tasks, updated: new Date() };
-          await Execution.update(workflowId, executionId, updates);
+          await this.executionDao.update(workflowId, executionId, updates);
 
           if(response.code < task.response.code)
             response = task.response;
@@ -168,7 +171,7 @@ class WorkflowsService {
           'state'          : 'waiting',
           'updated'        : new Date()
         }
-        await Execution.update(workflowId, executionId, updates);
+        await this.executionDao.update(workflowId, executionId, updates);
         return this.cloudTasksService.createTask(workflowId, executionId, nexRun, runCount + 1);
       } else if(response.code >= 300) { // 300-399
         assert.fail(); // TODO:
@@ -177,7 +180,7 @@ class WorkflowsService {
           'next.step'      : step[s + 1].name,
           'updated'        : new Date()
         }
-        await Execution.update(workflowId, executionId, updates);
+        await this.executionDao.update(workflowId, executionId, updates);
       } else {
         const updates = {
           'next'           : null,
@@ -185,7 +188,7 @@ class WorkflowsService {
           'state'          : 'completed',
           'updated'        : new Date()
         }
-        await Execution.update(workflowId, executionId, updates);
+        await this.executionDao.update(workflowId, executionId, updates);
       }
     
     } // for
