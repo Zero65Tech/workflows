@@ -1,41 +1,24 @@
 {
   "params": [ "date" ],
-  "steps": [
+  "tasks": [
     {
-      "name": "raw:fetch",
-      "tasks": [
-        {
-          "name": "amf",
-          "url": "https://market.zero65.in/task/fetch/amf/bhavcopy"
-        }
-      ]
+      "name": "raw_amf",
+      "url": "https://market.zero65.in/task/fetch/amf/bhavcopy"
     },
     {
-      "name": "raw:extract",
-      "tasks": [
-        {
-          "name": "amf",
-          "url": "https://market.zero65.in/task/transform/bhavcopy/amf"
-        }
-      ]
+      "name": "raw_amf_extract",
+      "needs": [ "raw:raw_amf" ],
+      "url": "https://market.zero65.in/task/transform/bhavcopy/amf"
     },
     {
-      "name": "stage:transform",
-      "tasks": [
-        {
-          "name": "amf",
-          "url": "https://market.zero65.in/task/transform/bhavcopy/amf"
-        }
-      ]
+      "name": "stage_amf",
+      "needs": [ "raw_amf_extract" ],
+      "url": "https://market.zero65.in/task/transform/bhavcopy/amf"
     },
     {
-      "name": "ready:prepare",
-      "tasks": [
-        {
-          "name": "prices",
-          "url": "https://market.zero65.in/task/prepare/prices-mf"
-        }
-      ]
+      "name": "ready_prices",
+      "needs": [ "stage_amf" ],
+      "url": "https://market.zero65.in/task/prepare/prices-mf"
     }
   ]
 }

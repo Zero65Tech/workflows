@@ -21,18 +21,18 @@ class WorkflowsService {
 
   }
 
-  updateWorkflow = async (workflowId, versionName, params, steps) => {
+  updateWorkflow = async (workflowId, versionName, params, tasks) => {
 
-    const checksum = utils.generateChecksum(JSON.parse(steps));
+    const checksum = utils.generateChecksum(JSON.parse(tasks));
 
     const version = await this.versionDao.getLatestByChecksum(workflowId, checksum);
     if(version) {
-      const updates = { name:versionName, params, steps, updated: new Date() };
+      const updates = { name:versionName, params, tasks, updated: new Date() };
       await this.versionDao.update(workflowId, version.id, updates);
       return version.id;
     }
 
-    const data = { name:versionName, params, steps, checksum, created: new Date(), updated: new Date() }
+    const data = { name:versionName, params, tasks, checksum, created: new Date(), updated: new Date() }
     return await this.versionDao.add(workflowId, data);
 
   }

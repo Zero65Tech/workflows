@@ -1,53 +1,39 @@
 {
   "params": [ "date" ],
-  "steps": [
+  "tasks": [
     {
-      "name": "raw:fetch",
-      "tasks": [
-        {
-          "name": "nse",
-          "url": "https://market.zero65.in/task/fetch/nse/corp-actions"
-        },
-        {
-          "name": "bse",
-          "url": "https://market.zero65.in/task/fetch/bse/corp-actions"
-        }
-      ]
+      "name": "raw_nse",
+      "url": "https://market.zero65.in/task/fetch/nse/corp-actions"
     },
     {
-      "name": "stage:transform",
-      "tasks": [
-        {
-          "name": "nse",
-          "url": "https://market.zero65.in/task/transform/corp-actions/bse"
-        },
-        {
-          "name": "bse",
-          "url": "https://market.zero65.in/task/transform/corp-actions/nse"
-        }
-      ]
+      "name": "raw_bse",
+      "needs": [ "raw_nse" ],
+      "url": "https://market.zero65.in/task/fetch/bse/corp-actions"
     },
     {
-      "name": "stage:aggregate",
-      "tasks": [
-        {
-          "name": "nse",
-          "url": "https://market.zero65.in/task/transform/corp-actions/aggregate"
-        }
-      ]
+      "name": "stage_nse",
+      "needs": [ "raw_nse" ],
+      "url": "https://market.zero65.in/task/transform/corp-actions/bse"
     },
     {
-      "name": "ready:prepare",
-      "tasks": [
-        {
-          "name": "nse",
-          "url": "https://market.zero65.in/task/prepare/corp-actions"
-        },
-        {
-          "name": "bse",
-          "url": "https://market.zero65.in/task/prepare/suspended-stocks"
-        }
-      ]
+      "name": "stage_bse",
+      "needs": [ "raw_bse" ],
+      "url": "https://market.zero65.in/task/transform/corp-actions/nse"
+    },
+    {
+      "name": "stage_aggregate",
+      "needs": [ "stage_nse", "stage_bse" ],
+      "url": "https://market.zero65.in/task/transform/corp-actions/aggregate"
+    },
+    {
+      "name": "ready_nse",
+      "needs": [ "stage_aggregate" ],
+      "url": "https://market.zero65.in/task/prepare/corp-actions"
+    },
+    {
+      "name": "ready_bse",
+      "needs": [ "stage_aggregate" ],
+      "url": "https://market.zero65.in/task/prepare/suspended-stocks"
     }
   ]
 }

@@ -1,49 +1,33 @@
 {
   "params": [ "date" ],
-  "steps": [
+  "tasks": [
     {
-      "name": "raw:downlod",
-      "tasks": [
-        {
-          "name": "nse",
-          "url": "https://market.zero65.in/task/fetch/nse/bhavcopy-eq"
-        },
-        {
-          "name": "bse",
-          "url": "https://market.zero65.in/task/fetch/bse/bhavcopy-eq"
-        }
-      ]
+      "name": "raw_nse",
+      "url": "https://market.zero65.in/task/fetch/nse/bhavcopy-eq"
     },
     {
-      "name": "stage:transform",
-      "tasks": [
-        {
-          "name": "nse",
-          "url": "https://market.zero65.in/task/transform/bhavcopy/nse-eq"
-        },
-        {
-          "name": "bse",
-          "url": "https://market.zero65.in/task/transform/bhavcopy/bse-eq"
-        }
-      ]
+      "name": "raw_bse",
+      "url": "https://market.zero65.in/task/fetch/bse/bhavcopy-eq"
     },
     {
-      "name": "stage:aggregate",
-      "tasks": [
-        {
-          "name": "both",
-          "url": "https://market.zero65.in/task/transform/bhavcopy/merge-eq"
-        }
-      ]
+      "name": "stage_nse",
+      "needs": [ "raw_nse" ],
+      "url": "https://market.zero65.in/task/transform/bhavcopy/nse-eq"
     },
     {
-      "name": "ready:prepare",
-      "tasks": [
-        {
-          "name": "prices",
-          "url": "https://market.zero65.in/task/prepare/prices-eq"
-        }
-      ]
+      "name": "stage_bse",
+      "needs": [ "raw_bse" ],
+      "url": "https://market.zero65.in/task/transform/bhavcopy/bse-eq"
+    },
+    {
+      "name": "stage_aggregate",
+      "needs": [ "stage_nse", "stage_bse" ],
+      "url": "https://market.zero65.in/task/transform/bhavcopy/merge-eq"
+    },
+    {
+      "name": "ready_prices",
+      "needs": [ "stage_aggregate" ],
+      "url": "https://market.zero65.in/task/prepare/prices-eq"
     }
   ]
 }
