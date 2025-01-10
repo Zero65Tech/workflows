@@ -135,7 +135,9 @@ class WorkflowsService {
 
       if(tasksToRun.length) {
 
-        let taskRuns = tasksToRun.map(task => {
+        const taskRuns = [];
+        for(let task of tasksToRun) {
+
           const taskRun = {
             name      : task.name,
             scheduled : execution.scheduled,
@@ -143,34 +145,34 @@ class WorkflowsService {
             ended     : null,
             response  : null
           };
+
           utils.doHttpGet(task.url, version.params)
-              .then(response => { task.response = { code: response.code, data: response.data }; })
-              .catch(error => { console.error('Error:', error.message); console.error(err.stack); });
+              .then(response => {
+                task.response = { code: response.code, data: response.data };
+                task.ended = new Date();
+              })
+              .catch(error => {
+                console.error('Error:', error.message);
+                console.error(err.stack);
+              });
+
+          taskRuns.push(taskRun);
           execution.tasks.push(taskRun);
-          return taskRun;
-        });
+
+        }
   
         // Updating the execution with the task runs (in progress)
         const updates = { 'tasks': execution.tasks, 'state': 'running', 'updated': new Date() };
         await this.executionDao.update(workflowId, executionId, updates);
   
-        while(taskRuns.length) {
+        while(taskRuns.some(taskRun => !taskRun.ended))
           await new Promise(resolve => setTimeout(resolve, 100));
-          for(let taskRun of taskRuns) {
-  
-            if(!taskRun.response)
-              continue;
-  
-            taskRun.ended = new Date();
-  
-            // Updating the execution task run (completed)
-            const updates = { 'tasks': execution.tasks, 'updated': new Date() };
-            await this.executionDao.update(workflowId, executionId, updates);
-  
-          }
-          taskRuns = taskRuns.filter(taskRun => !taskRun.ended);
-        }
-  
+
+        // Updating the execution with the task runs (completed)
+        const updates = { 'tasks': execution.tasks, 'updated': new Date() };
+        await this.executionDao.update(workflowId, executionId, updates);
+        
+        
       } else {
 
         const nextRun = Math.max(0, ...Object.values(taskRunInfoMap).filter(info => !info.done).map(info => info.nextRun));
@@ -195,7 +197,6 @@ class WorkflowsService {
         }
   
       }
-
 
     } // while(true)
 

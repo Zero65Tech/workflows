@@ -20,8 +20,8 @@ exports.add = Joi.object({
 }).required();
 
 exports.update = Joi.object({
-  scheduled: Joi.date().iso().required(),
-  count: Joi.number().integer().min(0).required(),
+  scheduled: Joi.date().iso(),
+  count: Joi.number().integer().min(0),
   tasks: Joi.array().items(taskRun),
   state: Joi.string().valid('running', 'waiting', 'completed', 'failed', 'error'),
   updated: Joi.date().iso().required()
