@@ -1,34 +1,28 @@
 const Joi = require('joi');
 
-const nextField = Joi.object({
-  step: Joi.string().required(),
-  scheduled: Joi.date().iso().required(),
-});
-
-const tasksField = Joi.array().items(Joi.object({
-  step: Joi.string().required(),
-  task: Joi.string().required(),
+const taskRun = Joi.object({
+  name: Joi.string().required(),
   scheduled: Joi.date().iso().required(),
   started: Joi.date().iso().required(),
   ended: Joi.date().iso().required(),
   response: Joi.string().required()
-}));
+});
 
 exports.add = Joi.object({
   versionId: Joi.string().required(),
   params: Joi.object().required(),
-  next: nextField.required(),
+  scheduled: Joi.date().iso().required(),
   count: Joi.number().integer().min(0).required(),
-  tasks: tasksField.required(),
+  tasks: Joi.array().items(taskRun).required(),
   state: Joi.string().valid('queued').required(),
   created: Joi.date().iso().required(),
   updated: Joi.date().iso().required()
 }).required();
 
 exports.update = Joi.object({
-  next: nextField,
+  scheduled: Joi.date().iso().required(),
   count: Joi.number().integer().min(0).required(),
-  tasks: tasksField,
-  state: Joi.string().valid('running', 'waiting', 'completed', 'failed'),
+  tasks: Joi.array().items(taskRun),
+  state: Joi.string().valid('running', 'waiting', 'completed', 'failed', 'error'),
   updated: Joi.date().iso().required()
-}).or('next', 'tasks', 'state').required();
+}).or('scheduled', 'tasks', 'state').required();
