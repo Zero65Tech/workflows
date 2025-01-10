@@ -37,17 +37,14 @@ class WorkflowsService {
 
   }
 
-  triggerWorkflow = async (workflowId, params, scheduled) => {
+  triggerWorkflow = async (workflowId, params, timestamp) => {
 
     const version = this.versionDao.getLatest(workflowId);
 
     const executionData = {
       versionId: version.id,
       params: params,
-      next: {
-        step: version.steps[0].name,
-        scheduled: scheduled
-      },
+      scheduled: timestamp,
       count: 0,
       tasks: [],
       state: 'queued',
@@ -106,20 +103,23 @@ class WorkflowsService {
     while(true) {
 
       const taskRunInfoMap = {};
-      for(let task of version.tasks)
+
+      for(const task of version.tasks)
         taskRunInfoMap[task.name] = { errorCount: 0, deferCount: 0, nextRun: 0, done: false };
 
-      for(let taskRun of execution.tasks) {
+      for(const taskRun of execution.tasks) {
         if(taskRun.response.code == 200) {
           taskRunInfoMap[task.name].done = true;
-        } else if(taskRun.response.code >= 400 && taskRun.response.code <= 499) {
+        } else if(taskRun.response.code == 404) {
           assert.ok(response.data.retryAfter);
           taskRunInfoMap[task.name].errorCount = 0;
           taskRunInfoMap[task.name].deferCount++;
           taskRunInfoMap[task.name].nextRun = task.ended.getTime() + task.response.data.retryAfter * 1000;
-        } else {
+        } else if(taskRun.response.code == 500) {
           taskRunInfoMap[task.name].errorCount++;
-          taskRunInfoMap[task.name].nextRun = task.ended.getTime() + taskRunInfoMap[task.name].errorCount++ * 60 * 1000;
+          taskRunInfoMap[task.name].nextRun = task.ended.getTime() + taskRunInfoMap[task.name].errorCount * 60 * 1000;
+        } else {
+          assert.fail();
         }
       }
 
@@ -133,7 +133,45 @@ class WorkflowsService {
         return true;
       });
 
-      if(!tasksToRun.length) {
+      if(tasksToRun.length) {
+
+        let taskRuns = tasksToRun.map(task => {
+          const taskRun = {
+            name      : task.name,
+            scheduled : execution.scheduled,
+            started   : new Date(),
+            ended     : null,
+            response  : null
+          };
+          utils.doHttpGet(task.url, version.params)
+              .then(response => { task.response = { code: response.code, data: response.data }; })
+              .catch(error => { console.error('Error:', error.message); console.error(err.stack); });
+          execution.tasks.push(taskRun);
+          return taskRun;
+        });
+  
+        // Updating the execution with the task runs (in progress)
+        const updates = { 'tasks': execution.tasks, 'state': 'running', 'updated': new Date() };
+        await this.executionDao.update(workflowId, executionId, updates);
+  
+        while(taskRuns.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          for(let taskRun of taskRuns) {
+  
+            if(!taskRun.response)
+              continue;
+  
+            taskRun.ended = new Date();
+  
+            // Updating the execution task run (completed)
+            const updates = { 'tasks': execution.tasks, 'updated': new Date() };
+            await this.executionDao.update(workflowId, executionId, updates);
+  
+          }
+          taskRuns = taskRuns.filter(taskRun => !taskRun.ended);
+        }
+  
+      } else {
 
         const nextRun = Math.max(0, ...Object.values(taskRunInfoMap).filter(info => !info.done).map(info => info.nextRun));
 
@@ -148,54 +186,18 @@ class WorkflowsService {
           this.cloudTasksService.createTask(workflowId, executionId, new Date(nextRun), runCount + 1);
         } else {
           const updates = {
-            'state'   : 'completed',
+            'scheduled' : null,
             'count'     : runCount + 1,
-            'updated' : new Date()
+            'state'     : 'completed',
+            'updated'   : new Date()
           }
           await this.executionDao.update(workflowId, executionId, updates);
         }
-
-        return;
   
       }
 
-      let taskRuns = tasksToRun.map(task => {
-        const taskRun = {
-          name      : task.name,
-          scheduled : execution.scheduled,
-          started   : new Date(),
-          ended     : null,
-          response  : null
-        };
-        utils.doHttpGet(task.url, version.params)
-            .then(response => { task.response = { code: response.code, data: response.data }; })
-            .catch(error => { console.error('Error:', error.message); }); // TODO: Use logger
-        execution.tasks.push(taskRun);
-        return taskRun;
-      });
 
-      // Updating the execution with the task runs (in progress)
-      const updates = { tasks: execution.tasks, state: 'running', updated: new Date() };
-      await this.executionDao.update(workflowId, executionId, updates);
-
-      while(taskRuns.length) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        for(let taskRun of taskRuns) {
-
-          if(!taskRun.response)
-            continue;
-
-          taskRun.ended = new Date();
-
-          // Updating the execution task run (completed)
-          const updates = { tasks: execution.tasks, updated: new Date() };
-          await this.executionDao.update(workflowId, executionId, updates);
-
-        }
-        taskRuns = taskRuns.filter(taskRun => !taskRun.ended);
-      }
-
-    } // while
+    } // while(true)
 
   } // processWorkflow
 
