@@ -263,7 +263,7 @@ describe('WorkflowsService', () => {
         updated: new Date()
       };
 
-      const taskUrlResponse = { code: 404, data: { retryAfter: 60 } }
+      const taskUrlResponse = { code: 404, data: { retryAfter: 5 * 60 } }
 
       versionDao.get.mockResolvedValue(version);
       executionDao.get.mockResolvedValue(execution);
@@ -391,7 +391,7 @@ describe('WorkflowsService', () => {
 
   describe('should execute workflow with two independent tasks', () => {
 
-    it('success', async () => {
+    it('both success', async () => {
 
       const version = {
         params: JSON.stringify({}),
@@ -477,7 +477,7 @@ describe('WorkflowsService', () => {
 
     });
 
-    it('deferred', async () => {
+    it('both deferred', async () => {
 
       const version = {
         params: JSON.stringify({}),
@@ -498,7 +498,7 @@ describe('WorkflowsService', () => {
         updated: new Date()
       };
 
-      const taskUrlResponse = { code: 404, data: { retryAfter: 60 } }
+      const taskUrlResponse = { code: 404, data: { retryAfter: 5 * 60 } }
 
       versionDao.get.mockResolvedValue(version);
       executionDao.get.mockResolvedValue(execution);
@@ -563,7 +563,7 @@ describe('WorkflowsService', () => {
 
     });
 
-    it('errored', async () => {
+    it('both errored', async () => {
 
       const version = {
         params: JSON.stringify({}),
@@ -642,6 +642,273 @@ describe('WorkflowsService', () => {
 
       expect(executionDao.update.mock.calls[2]).toEqual([ workflowId, executionId, expect.objectContaining({
         scheduled: new Date(execution.tasks[0].ended.getTime() + 60 * 1000),
+        count: 1,
+        state: 'waiting',
+        updated: expect.any(Date)
+      })]);
+
+    });
+
+    it('success & deferred', async () => {
+
+      const version = {
+        params: JSON.stringify({}),
+        tasks: JSON.stringify([
+          { name: 'task_1', url: 'http://example.com', needs: [] },
+          { name: 'task_2', url: 'http://example.com', needs: [] }
+        ])
+      };
+
+      const execution = {
+        versionId: 'vId',
+        params: {},
+        scheduled: new Date(),
+        count: 0,
+        tasks: [],
+        state: 'waiting',
+        created: new Date(),
+        updated: new Date()
+      };
+
+      const task1UrlResponse = { code: 200, data: { } }
+      const task2UrlResponse = { code: 404, data: { retryAfter: 5 * 60 } }
+
+      versionDao.get.mockResolvedValue(version);
+      executionDao.get.mockResolvedValue(execution);
+      utils.doHttpGet
+          .mockResolvedValueOnce(task1UrlResponse)
+          .mockResolvedValueOnce(task2UrlResponse);
+
+      const workflowId = 'wId';
+      const executionId = 'eId';
+      const runCount = 0;
+
+      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+
+      expect(executionDao.get).toHaveBeenCalledTimes(1);
+      expect(versionDao.get).toHaveBeenCalledTimes(1);
+      expect(executionDao.update).toHaveBeenCalledTimes(3);
+      expect(cloudTasksService.createTask).toHaveBeenCalledTimes(1);
+
+      expect(executionDao.get).toHaveBeenCalledWith(workflowId, executionId);
+
+      expect(versionDao.get).toHaveBeenCalledWith(workflowId, execution.versionId);
+
+      expect(executionDao.update.mock.calls[0]).toEqual([ workflowId, executionId, {
+        tasks: [{
+          name: 'task_1',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: null,
+          response: null
+        }, {
+          name: 'task_2',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: null,
+          response: null
+        }],
+        state: 'running',
+        updated: expect.any(Date)
+      }]);
+
+      expect(executionDao.update.mock.calls[1]).toEqual([ workflowId, executionId, expect.objectContaining({
+        tasks: [{
+          name: 'task_1',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: expect.any(Date),
+          response: task1UrlResponse
+        }, {
+          name: 'task_2',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: expect.any(Date),
+          response: task2UrlResponse
+        }],
+        updated: expect.any(Date)
+      })]);
+
+      expect(executionDao.update.mock.calls[2]).toEqual([ workflowId, executionId, expect.objectContaining({
+        scheduled: new Date(execution.tasks[0].ended.getTime() + task2UrlResponse.data.retryAfter * 1000),
+        count: 1,
+        state: 'waiting',
+        updated: expect.any(Date)
+      })]);
+
+    });
+
+    it('success & errored', async () => {
+
+      const version = {
+        params: JSON.stringify({}),
+        tasks: JSON.stringify([
+          { name: 'task_1', url: 'http://example.com', needs: [] },
+          { name: 'task_2', url: 'http://example.com', needs: [] }
+        ])
+      };
+
+      const execution = {
+        versionId: 'vId',
+        params: {},
+        scheduled: new Date(),
+        count: 0,
+        tasks: [],
+        state: 'waiting',
+        created: new Date(),
+        updated: new Date()
+      };
+
+      const task1UrlResponse = { code: 200, data: {} }
+      const task2UrlResponse = { code: 500, data: {} }
+
+      versionDao.get.mockResolvedValue(version);
+      executionDao.get.mockResolvedValue(execution);
+      utils.doHttpGet
+          .mockResolvedValueOnce(task1UrlResponse)
+          .mockResolvedValueOnce(task2UrlResponse);
+
+      const workflowId = 'wId';
+      const executionId = 'eId';
+      const runCount = 0;
+
+      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+
+      expect(executionDao.get).toHaveBeenCalledTimes(1);
+      expect(versionDao.get).toHaveBeenCalledTimes(1);
+      expect(executionDao.update).toHaveBeenCalledTimes(3);
+      expect(cloudTasksService.createTask).toHaveBeenCalledTimes(1);
+
+      expect(executionDao.get).toHaveBeenCalledWith(workflowId, executionId);
+
+      expect(versionDao.get).toHaveBeenCalledWith(workflowId, execution.versionId);
+
+      expect(executionDao.update.mock.calls[0]).toEqual([ workflowId, executionId, {
+        tasks: [{
+          name: 'task_1',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: null,
+          response: null
+        }, {
+          name: 'task_2',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: null,
+          response: null
+        }],
+        state: 'running',
+        updated: expect.any(Date)
+      }]);
+
+      expect(executionDao.update.mock.calls[1]).toEqual([ workflowId, executionId, expect.objectContaining({
+        tasks: [{
+          name: 'task_1',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: expect.any(Date),
+          response: task1UrlResponse
+        }, {
+          name: 'task_2',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: expect.any(Date),
+          response: task2UrlResponse
+        }],
+        updated: expect.any(Date)
+      })]);
+
+      expect(executionDao.update.mock.calls[2]).toEqual([ workflowId, executionId, expect.objectContaining({
+        scheduled: new Date(execution.tasks[0].ended.getTime() + 60 * 1000),
+        count: 1,
+        state: 'waiting',
+        updated: expect.any(Date)
+      })]);
+
+    });
+
+    it('deferred & errored', async () => {
+
+      const version = {
+        params: JSON.stringify({}),
+        tasks: JSON.stringify([
+          { name: 'task_1', url: 'http://example.com', needs: [] },
+          { name: 'task_2', url: 'http://example.com', needs: [] }
+        ])
+      };
+
+      const execution = {
+        versionId: 'vId',
+        params: {},
+        scheduled: new Date(),
+        count: 0,
+        tasks: [],
+        state: 'waiting',
+        created: new Date(),
+        updated: new Date()
+      };
+
+      const task1UrlResponse = { code: 404, data: { retryAfter: 5 * 60 } }
+      const task2UrlResponse = { code: 500, data: {} }
+
+      versionDao.get.mockResolvedValue(version);
+      executionDao.get.mockResolvedValue(execution);
+      utils.doHttpGet
+          .mockResolvedValueOnce(task1UrlResponse)
+          .mockResolvedValueOnce(task2UrlResponse);
+
+      const workflowId = 'wId';
+      const executionId = 'eId';
+      const runCount = 0;
+
+      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+
+      expect(executionDao.get).toHaveBeenCalledTimes(1);
+      expect(versionDao.get).toHaveBeenCalledTimes(1);
+      expect(executionDao.update).toHaveBeenCalledTimes(3);
+      expect(cloudTasksService.createTask).toHaveBeenCalledTimes(1);
+
+      expect(executionDao.get).toHaveBeenCalledWith(workflowId, executionId);
+
+      expect(versionDao.get).toHaveBeenCalledWith(workflowId, execution.versionId);
+
+      expect(executionDao.update.mock.calls[0]).toEqual([ workflowId, executionId, {
+        tasks: [{
+          name: 'task_1',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: null,
+          response: null
+        }, {
+          name: 'task_2',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: null,
+          response: null
+        }],
+        state: 'running',
+        updated: expect.any(Date)
+      }]);
+
+      expect(executionDao.update.mock.calls[1]).toEqual([ workflowId, executionId, expect.objectContaining({
+        tasks: [{
+          name: 'task_1',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: expect.any(Date),
+          response: task1UrlResponse
+        }, {
+          name: 'task_2',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: expect.any(Date),
+          response: task2UrlResponse
+        }],
+        updated: expect.any(Date)
+      })]);
+
+      expect(executionDao.update.mock.calls[2]).toEqual([ workflowId, executionId, expect.objectContaining({
+        scheduled: new Date(execution.tasks[0].ended.getTime() + task1UrlResponse.data.retryAfter * 1000),
         count: 1,
         state: 'waiting',
         updated: expect.any(Date)
