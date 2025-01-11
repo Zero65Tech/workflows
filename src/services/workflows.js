@@ -58,7 +58,7 @@ class WorkflowsService {
 
   }
 
-  processWorkflow = async (workflowId, executionId, runCount) => {
+  processWorkflow = async (workflowId, executionId, runCount = 0) => {
 
     /*
 
@@ -88,11 +88,13 @@ class WorkflowsService {
     */
 
     const execution = await this.executionDao.get(workflowId, executionId);
-    if(execution.state == 'completed' || execution.state == 'failed')
+    if(execution.state == 'completed' || execution.state == 'failed' || execution.state == 'error')
       return;
 
+    assert.ok(execution.state === 'running' || execution.state === 'waiting');
+
     if(runCount < execution.count)
-      return this.cloudTasksService.createTask(workflowId, executionId, execution.next.scheduled, execution.count);
+      return this.cloudTasksService.createTask(workflowId, executionId, execution.scheduled, execution.count);
 
     assert.strictEqual(runCount, execution.count);
 
@@ -109,15 +111,15 @@ class WorkflowsService {
 
       for(const taskRun of execution.tasks) {
         if(taskRun.response.code == 200) {
-          taskRunInfoMap[task.name].done = true;
+          taskRunInfoMap[taskRun.name].done = true;
         } else if(taskRun.response.code == 404) {
-          assert.ok(response.data.retryAfter);
-          taskRunInfoMap[task.name].errorCount = 0;
-          taskRunInfoMap[task.name].deferCount++;
-          taskRunInfoMap[task.name].nextRun = task.ended.getTime() + task.response.data.retryAfter * 1000;
+          assert.ok(taskRun.response.data.retryAfter);
+          taskRunInfoMap[taskRun.name].errorCount = 0;
+          taskRunInfoMap[taskRun.name].deferCount++;
+          taskRunInfoMap[taskRun.name].nextRun = taskRun.ended.getTime() + taskRun.response.data.retryAfter * 1000;
         } else if(taskRun.response.code == 500) {
-          taskRunInfoMap[task.name].errorCount++;
-          taskRunInfoMap[task.name].nextRun = task.ended.getTime() + taskRunInfoMap[task.name].errorCount * 60 * 1000;
+          taskRunInfoMap[taskRun.name].errorCount++;
+          taskRunInfoMap[taskRun.name].nextRun = taskRun.ended.getTime() + taskRunInfoMap[taskRun.name].errorCount * 60 * 1000;
         } else {
           assert.fail();
         }
@@ -160,19 +162,18 @@ class WorkflowsService {
           execution.tasks.push(taskRun);
 
         }
-  
+
         // Updating the execution with the task runs (in progress)
-        const updates = { 'tasks': execution.tasks, 'state': 'running', 'updated': new Date() };
+        let updates = { 'tasks': execution.tasks, 'state': 'running', 'updated': new Date() };
         await this.executionDao.update(workflowId, executionId, updates);
-  
+
         while(taskRuns.some(taskRun => !taskRun.ended))
           await new Promise(resolve => setTimeout(resolve, 100));
 
         // Updating the execution with the task runs (completed)
-        const updates = { 'tasks': execution.tasks, 'updated': new Date() };
+        updates = { 'tasks': execution.tasks, 'updated': new Date() };
         await this.executionDao.update(workflowId, executionId, updates);
-        
-        
+
       } else {
 
         const nextRun = Math.max(0, ...Object.values(taskRunInfoMap).filter(info => !info.done).map(info => info.nextRun));
@@ -195,7 +196,7 @@ class WorkflowsService {
           }
           await this.executionDao.update(workflowId, executionId, updates);
         }
-  
+
       }
 
     } // while(true)

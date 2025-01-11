@@ -1,4 +1,4 @@
-const { client, queuePath, hostName } = require('../config/cloudTasks');
+const { client, queuePath, hostName } = require('../../src/config/cloudTasks');
 
 class CloudTasksService {
 
