@@ -117,10 +117,12 @@ class WorkflowsService {
           taskRunInfoMap[taskRun.name].done = true;
         } else if(taskRun.response.code == 404) {
           assert.ok(taskRun.response.data.retryAfter);
+          assert.equal(taskRunInfoMap[taskRun.name].done, false);
           taskRunInfoMap[taskRun.name].errorCount = 0;
           taskRunInfoMap[taskRun.name].deferCount++;
           taskRunInfoMap[taskRun.name].nextRun = taskRun.ended.getTime() + taskRun.response.data.retryAfter * 1000;
         } else if(taskRun.response.code == 500) {
+          assert.equal(taskRunInfoMap[taskRun.name].done, false);
           taskRunInfoMap[taskRun.name].errorCount++;
           taskRunInfoMap[taskRun.name].nextRun = taskRun.ended.getTime() + taskRunInfoMap[taskRun.name].errorCount * 60 * 1000;
         } else {
@@ -128,20 +130,14 @@ class WorkflowsService {
         }
       }
 
-      const tasksToRun = version.tasks.filter(task => {
-        if(taskRunInfoMap[task.name].done)
-          return false;
-        if(taskRunInfoMap[task.name].nextRun > new Date().getTime())
-          return false;
-        if(task.needs.some(need => !taskRunInfoMap[need].done))
-          return false;
-        return true;
-      });
+      const tasksPending = version.tasks.filter(task => !taskRunInfoMap[task.name].done);
+      const tasksNotBlocked = tasksPending.filter(task => task.needs.every(need => taskRunInfoMap[need].done));
+      const tasksToRunNow = tasksNotBlocked.filter(task => taskRunInfoMap[task.name].nextRun <= new Date().getTime());
 
-      if(tasksToRun.length) {
+      if(tasksToRunNow.length) {
 
         const taskRuns = [];
-        for(let task of tasksToRun) {
+        for(let task of tasksToRunNow) {
 
           const taskRun = {
             name      : task.name,
@@ -177,28 +173,28 @@ class WorkflowsService {
         updates = { 'tasks': _.cloneDeep(execution.tasks), 'updated': new Date() };
         await this.executionDao.update(workflowId, executionId, updates);
 
+      } else if(tasksNotBlocked.length) {
+
+        const nextRun = Math.min(...tasksNotBlocked.map(task => taskRunInfoMap[task.name].nextRun));
+
+        const updates = { 'scheduled': new Date(nextRun), 'count': runCount + 1, 'state': 'waiting', 'updated': new Date() };
+        await this.executionDao.update(workflowId, executionId, updates);
+
+        this.cloudTasksService.createTask(workflowId, executionId, new Date(nextRun), runCount + 1);
+
+        break;
+
+      } else if(tasksPending.length) {
+
+        const updates = { 'scheduled': null, 'count': runCount + 1, 'state': 'error', 'updated': new Date() };
+        await this.executionDao.update(workflowId, executionId, updates);
+
+        break;
+
       } else {
 
-        const nextRun = Math.max(0, ...Object.values(taskRunInfoMap).filter(info => !info.done).map(info => info.nextRun));
-
-        if(nextRun) {
-          const updates = {
-            'scheduled' : new Date(nextRun),
-            'count'     : runCount + 1,
-            'state'     : 'waiting',
-            'updated'   : new Date()
-          }
-          await this.executionDao.update(workflowId, executionId, updates);
-          this.cloudTasksService.createTask(workflowId, executionId, new Date(nextRun), runCount + 1);
-        } else {
-          const updates = {
-            'scheduled' : null,
-            'count'     : runCount + 1,
-            'state'     : 'completed',
-            'updated'   : new Date()
-          }
-          await this.executionDao.update(workflowId, executionId, updates);
-        }
+        const updates = { 'scheduled': null, 'count': runCount + 1, 'state': 'completed', 'updated': new Date() };
+        await this.executionDao.update(workflowId, executionId, updates);
 
         break;
 
