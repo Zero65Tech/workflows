@@ -395,7 +395,10 @@ describe('WorkflowsService', () => {
 
       const version = {
         params: JSON.stringify({}),
-        tasks: JSON.stringify([{ name: 'task_1', url: 'http://example.com', needs: [] }])
+        tasks: JSON.stringify([
+          { name: 'task_1', url: 'http://example.com', needs: [] },
+          { name: 'task_2', url: 'http://example.com', needs: [] }
+        ])
       };
 
       const execution = {
@@ -437,6 +440,12 @@ describe('WorkflowsService', () => {
           started: expect.any(Date),
           ended: null,
           response: null
+        }, {
+          name: 'task_2',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: null,
+          response: null
         }],
         state: 'running',
         updated: expect.any(Date)
@@ -445,6 +454,12 @@ describe('WorkflowsService', () => {
       expect(executionDao.update.mock.calls[1]).toEqual([ workflowId, executionId, expect.objectContaining({
         tasks: [{
           name: 'task_1',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: expect.any(Date),
+          response: taskUrlResponse
+        }, {
+          name: 'task_2',
           scheduled: execution.scheduled,
           started: expect.any(Date),
           ended: expect.any(Date),
@@ -466,7 +481,10 @@ describe('WorkflowsService', () => {
 
       const version = {
         params: JSON.stringify({}),
-        tasks: JSON.stringify([{ name: 'task_1', url: 'http://example.com', needs: [] }])
+        tasks: JSON.stringify([
+          { name: 'task_1', url: 'http://example.com', needs: [] },
+          { name: 'task_2', url: 'http://example.com', needs: [] }
+        ])
       };
 
       const execution = {
@@ -508,6 +526,12 @@ describe('WorkflowsService', () => {
           started: expect.any(Date),
           ended: null,
           response: null
+        }, {
+          name: 'task_2',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: null,
+          response: null
         }],
         state: 'running',
         updated: expect.any(Date)
@@ -516,6 +540,12 @@ describe('WorkflowsService', () => {
       expect(executionDao.update.mock.calls[1]).toEqual([ workflowId, executionId, expect.objectContaining({
         tasks: [{
           name: 'task_1',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: expect.any(Date),
+          response: taskUrlResponse
+        }, {
+          name: 'task_2',
           scheduled: execution.scheduled,
           started: expect.any(Date),
           ended: expect.any(Date),
@@ -537,7 +567,10 @@ describe('WorkflowsService', () => {
 
       const version = {
         params: JSON.stringify({}),
-        tasks: JSON.stringify([{ name: 'task_1', url: 'http://example.com', needs: [] }])
+        tasks: JSON.stringify([
+          { name: 'task_1', url: 'http://example.com', needs: [] },
+          { name: 'task_2', url: 'http://example.com', needs: [] }
+        ])
       };
 
       const execution = {
@@ -579,6 +612,12 @@ describe('WorkflowsService', () => {
           started: expect.any(Date),
           ended: null,
           response: null
+        }, {
+          name: 'task_2',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: null,
+          response: null
         }],
         state: 'running',
         updated: expect.any(Date)
@@ -587,6 +626,12 @@ describe('WorkflowsService', () => {
       expect(executionDao.update.mock.calls[1]).toEqual([ workflowId, executionId, expect.objectContaining({
         tasks: [{
           name: 'task_1',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: expect.any(Date),
+          response: taskUrlResponse
+        }, {
+          name: 'task_2',
           scheduled: execution.scheduled,
           started: expect.any(Date),
           ended: expect.any(Date),
