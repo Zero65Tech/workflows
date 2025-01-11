@@ -119,16 +119,17 @@ describe('WorkflowsService', () => {
   });
 */
 
-  describe('should not process', () => {
+  describe('should not process at all', () => {
     for(const state of [ 'completed', 'failed', 'error' ]) {
       it(`execution.state: ${state}`, async () => {
+
+        const execution = { state: state };
+
+        executionDao.get.mockResolvedValue(execution);
 
         const workflowId = 'wId';
         const executionId = 'eId';
         const runCount = undefined;
-
-        const execution = { state: state };
-        executionDao.get.mockResolvedValue(execution);
 
         await workflowsService.processWorkflow(workflowId, executionId, runCount);
 
@@ -142,17 +143,18 @@ describe('WorkflowsService', () => {
     }
   });
 
-  describe('should create a new task if runCount < execution.count', () => {
+  describe('should only create a new task if runCount < execution.count', () => {
     for(const runCount of [ undefined, null, 0, 1, 2]) {
       for(const state of [ 'running', 'waiting' ]) {
         it(`execution.state: ${state}, runCount: ${runCount}`, async () => {
 
+          const execution = { scheduled: new Date(), count: 2, state: state };
+
+          executionDao.get.mockResolvedValue(execution);
+
           const workflowId = 'wId';
           const executionId = 'eId';
           const runCount = undefined;
-
-          const execution = { scheduled: new Date(), count: 2, state: state };
-          executionDao.get.mockResolvedValue(execution);
 
           await workflowsService.processWorkflow(workflowId, executionId, runCount);
 
@@ -167,6 +169,156 @@ describe('WorkflowsService', () => {
     }
   });
 
-  // Add more tests for different scenarios in processWorkflow
+  describe('should execute workflow tasks and update execution data', () => {
+
+    it('single task', async () => {
+
+      const version = {
+        params: JSON.stringify({}),
+        tasks: JSON.stringify([{ name: 'task_1', url: 'http://example.com', needs: [] }])
+      };
+
+      const execution = {
+        versionId: 'vId',
+        params: {},
+        scheduled: new Date(),
+        count: 0,
+        tasks: [],
+        state: 'waiting',
+        created: new Date(),
+        updated: new Date()
+      };
+
+      const taskUrlResponse = { code: 200, data: {} }
+
+      versionDao.get.mockResolvedValue(version);
+      executionDao.get.mockResolvedValue(execution);
+      utils.doHttpGet.mockResolvedValue(taskUrlResponse);
+
+      const workflowId = 'wId';
+      const executionId = 'eId';
+      const runCount = 0;
+
+      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+
+      expect(executionDao.get).toHaveBeenCalledWith(workflowId, executionId);
+      expect(versionDao.get).toHaveBeenCalledWith(workflowId, execution.versionId);
+
+      expect(executionDao.update.mock.calls[0]).toEqual([ workflowId, executionId, {
+        tasks: [{
+          name: 'task_1',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: null,
+          response: null
+        }],
+        state: 'running',
+        updated: expect.any(Date)
+      }]);
+
+      expect(executionDao.update.mock.calls[1]).toEqual([ workflowId, executionId, expect.objectContaining({
+        tasks: [{
+          name: 'task_1',
+          scheduled: execution.scheduled,
+          started: expect.any(Date),
+          ended: expect.any(Date),
+          response: taskUrlResponse
+        }],
+        updated: expect.any(Date)
+      })]);
+
+      expect(executionDao.update.mock.calls[2]).toEqual([ workflowId, executionId, expect.objectContaining({
+        count: 1,
+        scheduled: null,
+        state: 'completed',
+        updated: expect.any(Date)
+      })]);
+
+      expect(cloudTasksService.createTask).not.toHaveBeenCalled();
+
+    });
+
+    it('should defer task execution if response code is 404', async () => {
+      const workflowId = 'wId';
+      const executionId = 'eId';
+      const runCount = 2;
+
+      const execution = {
+        state: 'running',
+        count: 2,
+        tasks: [],
+        versionId: 'vId'
+      };
+      const version = {
+        params: JSON.stringify({}),
+        tasks: JSON.stringify([{ name: 'task1', url: 'http://example.com', needs: [] }])
+      };
+
+      executionDao.get.mockResolvedValue(execution);
+      versionDao.get.mockResolvedValue(version);
+      utils.doHttpGet.mockResolvedValue({ code: 404, data: { retryAfter: 60 } });
+
+      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+
+      expect(executionDao.get).toHaveBeenCalledWith(workflowId, executionId);
+      expect(versionDao.get).toHaveBeenCalledWith(workflowId, execution.versionId);
+      expect(executionDao.update).toHaveBeenCalledWith(workflowId, executionId, expect.objectContaining({ state: 'waiting' }));
+      expect(cloudTasksService.createTask).toHaveBeenCalled();
+    });
+
+    it('should retry task execution if response code is 500', async () => {
+      const workflowId = 'wId';
+      const executionId = 'eId';
+      const runCount = 2;
+
+      const execution = {
+        state: 'running',
+        count: 2,
+        tasks: [],
+        versionId: 'vId'
+      };
+      const version = {
+        params: JSON.stringify({}),
+        tasks: JSON.stringify([{ name: 'task1', url: 'http://example.com', needs: [] }])
+      };
+
+      executionDao.get.mockResolvedValue(execution);
+      versionDao.get.mockResolvedValue(version);
+      utils.doHttpGet.mockResolvedValue({ code: 500, data: {} });
+
+      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+
+      expect(executionDao.get).toHaveBeenCalledWith(workflowId, executionId);
+      expect(versionDao.get).toHaveBeenCalledWith(workflowId, execution.versionId);
+      expect(executionDao.update).toHaveBeenCalledWith(workflowId, executionId, expect.objectContaining({ state: 'running' }));
+      expect(cloudTasksService.createTask).toHaveBeenCalled();
+    });
+
+    it('should fail if task response code is unexpected', async () => {
+      const workflowId = 'wId';
+      const executionId = 'eId';
+      const runCount = 2;
+
+      const execution = {
+        state: 'running',
+        count: 2,
+        tasks: [],
+        versionId: 'vId'
+      };
+      const version = {
+        params: JSON.stringify({}),
+        tasks: JSON.stringify([{ name: 'task1', url: 'http://example.com', needs: [] }])
+      };
+
+      executionDao.get.mockResolvedValue(execution);
+      versionDao.get.mockResolvedValue(version);
+      utils.doHttpGet.mockResolvedValue({ code: 403, data: {} });
+
+      await expect(workflowsService.processWorkflow(workflowId, executionId, runCount)).rejects.toThrow();
+
+      expect(executionDao.get).toHaveBeenCalledWith(workflowId, executionId);
+      expect(versionDao.get).toHaveBeenCalledWith(workflowId, execution.versionId);
+    });
+  });
 
 });

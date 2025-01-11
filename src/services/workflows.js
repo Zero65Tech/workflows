@@ -1,4 +1,5 @@
 const assert = require('assert');
+const _ = require('lodash');
 const utils = require('../utils');
 
 class WorkflowsService {
@@ -98,7 +99,7 @@ class WorkflowsService {
 
     assert.strictEqual(runCount, execution.count);
 
-    const version = this.versionDao.get(workflowId, execution.versionId);
+    const version = await this.versionDao.get(workflowId, execution.versionId);
     version.params = JSON.parse(version.params);
     version.tasks = JSON.parse(version.tasks);
 
@@ -150,12 +151,12 @@ class WorkflowsService {
 
           utils.doHttpGet(task.url, version.params)
               .then(response => {
-                task.response = { code: response.code, data: response.data };
-                task.ended = new Date();
+                taskRun.response = { code: response.code, data: response.data };
+                taskRun.ended = new Date();
               })
               .catch(error => {
                 console.error('Error:', error.message);
-                console.error(err.stack);
+                console.error(error.stack);
               });
 
           taskRuns.push(taskRun);
@@ -164,14 +165,14 @@ class WorkflowsService {
         }
 
         // Updating the execution with the task runs (in progress)
-        let updates = { 'tasks': execution.tasks, 'state': 'running', 'updated': new Date() };
+        let updates = { 'tasks': _.cloneDeep(execution.tasks), 'state': 'running', 'updated': new Date() };
         await this.executionDao.update(workflowId, executionId, updates);
 
         while(taskRuns.some(taskRun => !taskRun.ended))
           await new Promise(resolve => setTimeout(resolve, 100));
 
         // Updating the execution with the task runs (completed)
-        updates = { 'tasks': execution.tasks, 'updated': new Date() };
+        updates = { 'tasks': _.cloneDeep(execution.tasks), 'updated': new Date() };
         await this.executionDao.update(workflowId, executionId, updates);
 
       } else {
@@ -196,6 +197,8 @@ class WorkflowsService {
           }
           await this.executionDao.update(workflowId, executionId, updates);
         }
+
+        break;
 
       }
 
