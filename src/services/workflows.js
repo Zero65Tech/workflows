@@ -94,8 +94,10 @@ class WorkflowsService {
 
     assert.ok(execution.state === 'running' || execution.state === 'waiting');
 
-    if(runCount < execution.count)
-      return this.cloudTasksService.createTask(workflowId, executionId, execution.scheduled, execution.count);
+    if(runCount < execution.count) {
+      this.cloudTasksService.createTask(workflowId, executionId, execution.scheduled, execution.count);
+      return;
+    }
 
     assert.strictEqual(runCount, execution.count);
 

@@ -54,7 +54,7 @@ describe('WorkflowsService', () => {
   });
 
   describe('should only create a new task if runCount < execution.count', () => {
-    for(const runCount of [ undefined, null, 0, 1, 2]) {
+    for(const runCount of [ undefined, null, 0, 1 ]) {
       for(const state of [ 'running', 'waiting' ]) {
         it(`execution.state: ${state}, runCount: ${runCount}`, async () => {
 
@@ -64,7 +64,6 @@ describe('WorkflowsService', () => {
 
           const workflowId = 'wId';
           const executionId = 'eId';
-          const runCount = undefined;
 
           await workflowsService.processWorkflow(workflowId, executionId, runCount);
 
