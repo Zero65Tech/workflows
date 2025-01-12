@@ -1,0 +1,21 @@
+{
+  "params": [ "date" ],
+  "tasks": [
+    {
+      "name": "funds",
+      "url": "https://portfolio.zero65.in/task/update/funds"
+    },
+    {
+      "name": "organize",
+      "url": "https://portfolio.zero65.in/task/update/organized"
+    },
+    {
+      "name": "holdings",
+      "url": "https://portfolio.zero65.in/task/update/holdings"
+    },
+    {
+      "name": "pnl",
+      "url": "https://portfolio.zero65.in/task/update/pnl"
+    }
+  ]
+}
