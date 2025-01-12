@@ -1,6 +1,7 @@
 {
   "params": [ "date" ],
   "tasks": [
+
     {
       "name": "raw_nse",
       "url": "https://market.zero65.in/task/fetch/nse/bhavcopy-fo"
@@ -9,6 +10,7 @@
       "name": "raw_bse",
       "url": "https://market.zero65.in/task/fetch/bse/bhavcopy-fo"
     },
+
     {
       "name": "stage_nse",
       "needs": [ "raw_nse" ],
@@ -19,15 +21,17 @@
       "needs": [ "raw_bse" ],
       "url": "https://market.zero65.in/task/transform/bhavcopy/bse-fo"
     },
+
     {
-      "name": "ready_nse",
+      "name": "ready_nse_prices",
       "needs": [ "stage_nse" ],
       "url": "https://market.zero65.in/task/prepare/prices-fo-nse"
     },
     {
-      "name": "ready_bse",
+      "name": "ready_bse_prices",
       "needs": [ "stage_bse" ],
       "url": "https://market.zero65.in/task/prepare/prices-fo-bse"
     }
+
   ]
 }

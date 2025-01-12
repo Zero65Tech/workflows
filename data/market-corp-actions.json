@@ -1,15 +1,16 @@
 {
   "params": [ "date" ],
   "tasks": [
+
     {
       "name": "raw_nse",
       "url": "https://market.zero65.in/task/fetch/nse/corp-actions"
     },
     {
       "name": "raw_bse",
-      "needs": [ "raw_nse" ],
       "url": "https://market.zero65.in/task/fetch/bse/corp-actions"
     },
+
     {
       "name": "stage_nse",
       "needs": [ "raw_nse" ],
@@ -20,20 +21,23 @@
       "needs": [ "raw_bse" ],
       "url": "https://market.zero65.in/task/transform/corp-actions/nse"
     },
+
     {
       "name": "stage_aggregate",
       "needs": [ "stage_nse", "stage_bse" ],
       "url": "https://market.zero65.in/task/transform/corp-actions/aggregate"
     },
+
     {
-      "name": "ready_nse",
+      "name": "ready_corp-actions",
       "needs": [ "stage_aggregate" ],
       "url": "https://market.zero65.in/task/prepare/corp-actions"
     },
     {
-      "name": "ready_bse",
+      "name": "ready_suspended-stocks",
       "needs": [ "stage_aggregate" ],
       "url": "https://market.zero65.in/task/prepare/suspended-stocks"
     }
+
   ]
 }

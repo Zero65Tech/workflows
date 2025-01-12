@@ -1,41 +1,51 @@
 {
   "params": [ "portfolioId", "date" ],
   "tasks": [
+
     {
-      "name": "mf",
+      "name": "raw_mf",
       "url": "https://market.zero65.in/task/fetch/zerodha/trades-mf"
     },
     {
-      "name": "eq",
+      "name": "raw_eq",
       "url": "https://market.zero65.in/task/fetch/zerodha/trades-eq"
     },
     {
-      "name": "fo",
+      "name": "raw_fo",
       "url": "https://market.zero65.in/task/fetch/zerodha/trades-fo"
     },
+
     {
-      "name": "mf",
+      "name": "stage_mf",
+      "needs": [ "raw_mf" ],
       "url": "https://market.zero65.in/task/transform/trades/zerodha-mf"
     },
     {
-      "name": "eq",
+      "name": "stage_eq",
+      "needs": [ "raw_eq" ],
       "url": "https://market.zero65.in/task/transform/trades/zerodha-eq"
     },
     {
-      "name": "fo",
+      "name": "stage_fo",
+      "needs": [ "raw_fo" ],
       "url": "https://market.zero65.in/task/transform/trades/zerodha-fo"
     },
+
     {
-      "name": "orgainze",
+      "name": "ready_mf",
+      "needs": [ "stage_mf" ],
       "url": "https://market.zero65.in/task/prepare/trades"
     },
     {
-      "name": "orgainze",
+      "name": "ready_eq",
+      "needs": [ "stage_eq" ],
       "url": "https://market.zero65.in/task/prepare/trades"
     },
     {
-      "name": "orgainze",
+      "name": "ready_fo",
+      "needs": [ "stage_fo" ],
       "url": "https://market.zero65.in/task/prepare/trades"
     }
+
   ]
 }
