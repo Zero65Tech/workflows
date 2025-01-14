@@ -100,7 +100,7 @@ describe('executeWorkflow', () => {
         updated: new Date()
       };
 
-      const taskUrlResponse = { code: 200, data: {} }
+      const taskUrlResponse = { status: 200, data: {} }
 
       versionDao.get.mockResolvedValue(version);
       executionDao.get.mockResolvedValue(execution);
@@ -171,7 +171,7 @@ describe('executeWorkflow', () => {
         updated: new Date()
       };
 
-      const taskUrlResponse = { code: 404, data: { retryAfter: 5 * 60 } }
+      const taskUrlResponse = { status: 404, data: { retryAfter: 5 * 60 } }
 
       versionDao.get.mockResolvedValue(version);
       executionDao.get.mockResolvedValue(execution);
@@ -242,7 +242,7 @@ describe('executeWorkflow', () => {
         updated: new Date()
       };
 
-      const taskUrlResponse = { code: 500, data: {} }
+      const taskUrlResponse = { status: 503, data: {} }
 
       versionDao.get.mockResolvedValue(version);
       executionDao.get.mockResolvedValue(execution);
@@ -320,7 +320,7 @@ describe('executeWorkflow', () => {
         updated: new Date()
       };
 
-      const taskUrlResponse = { code: 200, data: {} }
+      const taskUrlResponse = { status: 200, data: {} }
 
       versionDao.get.mockResolvedValue(version);
       executionDao.get.mockResolvedValue(execution);
@@ -406,7 +406,7 @@ describe('executeWorkflow', () => {
         updated: new Date()
       };
 
-      const taskUrlResponse = { code: 404, data: { retryAfter: 5 * 60 } }
+      const taskUrlResponse = { status: 404, data: { retryAfter: 5 * 60 } }
 
       versionDao.get.mockResolvedValue(version);
       executionDao.get.mockResolvedValue(execution);
@@ -492,7 +492,7 @@ describe('executeWorkflow', () => {
         updated: new Date()
       };
 
-      const taskUrlResponse = { code: 500, data: {} }
+      const taskUrlResponse = { status: 503, data: {} }
 
       versionDao.get.mockResolvedValue(version);
       executionDao.get.mockResolvedValue(execution);
@@ -578,8 +578,8 @@ describe('executeWorkflow', () => {
         updated: new Date()
       };
 
-      const task1UrlResponse = { code: 200, data: { } }
-      const task2UrlResponse = { code: 404, data: { retryAfter: 5 * 60 } }
+      const task1UrlResponse = { status: 200, data: { } }
+      const task2UrlResponse = { status: 404, data: { retryAfter: 5 * 60 } }
 
       versionDao.get.mockResolvedValue(version);
       executionDao.get.mockResolvedValue(execution);
@@ -667,8 +667,8 @@ describe('executeWorkflow', () => {
         updated: new Date()
       };
 
-      const task1UrlResponse = { code: 200, data: {} }
-      const task2UrlResponse = { code: 500, data: {} }
+      const task1UrlResponse = { status: 200, data: {} }
+      const task2UrlResponse = { status: 503, data: {} }
 
       versionDao.get.mockResolvedValue(version);
       executionDao.get.mockResolvedValue(execution);
@@ -756,8 +756,8 @@ describe('executeWorkflow', () => {
         updated: new Date()
       };
 
-      const task1UrlResponse = { code: 404, data: { retryAfter: 5 * 60 } }
-      const task2UrlResponse = { code: 500, data: {} }
+      const task1UrlResponse = { status: 404, data: { retryAfter: 5 * 60 } }
+      const task2UrlResponse = { status: 503, data: {} }
 
       versionDao.get.mockResolvedValue(version);
       executionDao.get.mockResolvedValue(execution);
@@ -849,7 +849,7 @@ describe('executeWorkflow', () => {
         updated: new Date()
       };
 
-      const taskUrlResponse = { code: 200, data: {} }
+      const taskUrlResponse = { status: 200, data: {} }
 
       versionDao.get.mockResolvedValue(version);
       executionDao.get.mockResolvedValue(execution);
@@ -958,7 +958,7 @@ describe('executeWorkflow', () => {
         updated: new Date()
       };
 
-      const taskUrlResponse = { code: 404, data: { retryAfter: 5 * 60 } }
+      const taskUrlResponse = { status: 404, data: { retryAfter: 5 * 60 } }
 
       versionDao.get.mockResolvedValue(version);
       executionDao.get.mockResolvedValue(execution);
@@ -1032,7 +1032,7 @@ describe('executeWorkflow', () => {
         updated: new Date()
       };
 
-      const taskUrlResponse = { code: 500, data: {} }
+      const taskUrlResponse = { status: 503, data: {} }
 
       versionDao.get.mockResolvedValue(version);
       executionDao.get.mockResolvedValue(execution);
@@ -1209,7 +1209,7 @@ describe('executeWorkflow', () => {
         updated: new Date()
       };
 
-      const taskUrlResponse = { code: 200, data: {} }
+      const taskUrlResponse = { status: 200, data: {} }
 
       versionDao.get.mockResolvedValue(version);
       executionDao.get.mockResolvedValue(execution);

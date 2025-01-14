@@ -117,15 +117,15 @@ class WorkflowsService {
       for(const taskRun of execution.tasks) {
         if(taskRun.response === null) {
           continue;
-        } else if(taskRun.response.code == 200) {
+        } else if(taskRun.response.status == 200) {
           taskRunInfoMap[taskRun.name].done = true;
-        } else if(taskRun.response.code == 404) {
+        } else if(taskRun.response.status == 404) {
           assert.ok(taskRun.response.data.retryAfter);
           assert.equal(taskRunInfoMap[taskRun.name].done, false);
           taskRunInfoMap[taskRun.name].errorCount = 0;
           taskRunInfoMap[taskRun.name].deferCount++;
           taskRunInfoMap[taskRun.name].nextRun = taskRun.ended.getTime() + taskRun.response.data.retryAfter * 1000;
-        } else if(taskRun.response.code == 503) {
+        } else if(taskRun.response.status == 503) {
           assert.equal(taskRunInfoMap[taskRun.name].done, false);
           taskRunInfoMap[taskRun.name].errorCount++;
           taskRunInfoMap[taskRun.name].nextRun = taskRun.ended.getTime() + taskRunInfoMap[taskRun.name].errorCount * 60 * 1000;
@@ -151,9 +151,9 @@ class WorkflowsService {
             response  : null
           };
 
-          utils.doHttpGet(task.url, version.params)
+          utils.doHttpGet(task.url, execution.params)
               .then(response => {
-                taskRun.response = { code: response.status, data: response.data };
+                taskRun.response = { status: response.status, data: response.data };
                 taskRun.ended = new Date();
               })
               .catch(error => {
