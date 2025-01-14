@@ -31,11 +31,11 @@ const workflows = fs.readdirSync(__dirname)
 
     const workflowId = await workflowsService.createWorkflow(name, owner);
 
-    let { params, steps } = require(`./${name}.json`);
+    let { params, tasks } = require(`./${name}.json`);
     params = JSON.stringify(params);
-    steps = JSON.stringify(steps);
+    tasks = JSON.stringify(tasks);
 
-    await workflowsService.updateWorkflow(workflowId, null, params, steps);
+    await workflowsService.updateWorkflow(workflowId, null, params, tasks);
 
   }
 
