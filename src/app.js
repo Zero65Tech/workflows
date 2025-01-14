@@ -23,7 +23,7 @@ app.use(express.json());
 app.post('/create', workflowsController.createWorkflow);
 app.post('/update/:workflowId', workflowsController.updateWorkflow);
 app.post('/trigger/:workflowId', workflowsController.triggerWorkflow);
-app.post('/process/:workflowId/:executionId/:runCount', workflowsController.processWorkflow);
+app.post('/execute/:workflowId/:executionId/:runCount', workflowsController.executeWorkflow);
 
 // Export App
 module.exports = app;

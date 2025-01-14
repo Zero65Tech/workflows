@@ -59,7 +59,7 @@ class WorkflowsService {
 
   }
 
-  processWorkflow = async (workflowId, executionId, runCount = 0) => {
+  executeWorkflow = async (workflowId, executionId, runCount = 0) => {
 
     /*
 

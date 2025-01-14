@@ -24,9 +24,9 @@ class WorkflowsController {
     res.send({ executionId });
   };
 
-  processWorkflow = async (req, res) => {
+  executeWorkflow = async (req, res) => {
     const { workflowId, executionId, runCount } = req.params;
-    this.workflowService.processWorkflow(workflowId, executionId, runCount);
+    this.workflowService.executeWorkflow(workflowId, executionId, runCount);
     res.sendStatus(204);
   };
 
