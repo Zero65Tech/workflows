@@ -27,7 +27,7 @@ exports.getLatestByNameAndOwner = async (name, owner) => {
 
 }
 
-exports.add = async (data) => {
+exports.create = async (data) => {
   await model.add.validateAsync(data);
   const ref = await collection.add(data);
   return ref.id;

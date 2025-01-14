@@ -38,9 +38,9 @@ class WorkflowsService {
 
   }
 
-  triggerWorkflow = async (workflowId, params, timestamp) => {
+  triggerWorkflow = async (workflowId, params, timestamp = null) => {
 
-    const version = this.versionDao.getLatest(workflowId);
+    const version = await this.versionDao.getLatest(workflowId);
 
     const executionData = {
       versionId: version.id,

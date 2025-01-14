@@ -10,6 +10,21 @@ function toData(doc) {
   return data;
 }
 
+exports.getLatest = async (workflowId) => {
+
+  const query = collection.doc(workflowId)
+      .collection('VERSION')
+      .orderBy("updated", "desc")
+      .limit(1);
+
+  const snap = await query.get();
+  if(snap.empty)
+    return null;
+
+  return toData(snap.docs[0]);
+
+}
+
 exports.getLatestByChecksum = async (workflowId, checksum) => {
 
   const query = collection.doc(workflowId)
@@ -27,7 +42,7 @@ exports.getLatestByChecksum = async (workflowId, checksum) => {
 
 }
 
-exports.add = async (workflowId, data) => {
+exports.create = async (workflowId, data) => {
   await model.add.validateAsync(data);
   const ref = await collection.doc(workflowId).collection('VERSION').add(data);
   return ref.id;

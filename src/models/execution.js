@@ -11,13 +11,13 @@ const taskRun = Joi.object({
 exports.add = Joi.object({
   versionId: Joi.string().required(),
   params: Joi.object().required(),
-  scheduled: Joi.date().iso().required(),
+  scheduled: Joi.date().iso().allow(null).required(),
   count: Joi.number().integer().min(0).required(),
   tasks: Joi.array().items(taskRun).required(),
   state: Joi.string().valid('queued').required(),
   created: Joi.date().iso().required(),
   updated: Joi.date().iso().required()
-}).required();
+});
 
 exports.update = Joi.object({
   scheduled: Joi.date().iso(),

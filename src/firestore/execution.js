@@ -15,7 +15,7 @@ exports.get = async (workflowId, executionId) => {
   return doc.exists ? toData(doc) : null;
 }
 
-exports.add = async (workflowId, data) => {
+exports.create = async (workflowId, data) => {
   await model.add.validateAsync(data);
   const ref = await collection.doc(workflowId).collection('EXECUTION').add(data);
   return ref.id;
