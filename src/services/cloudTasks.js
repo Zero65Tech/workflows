@@ -8,7 +8,7 @@ class CloudTasksService {
       ? `${workflowId}-${executionId}-${runCount}`
       : `${workflowId}-${executionId}`);
 
-    const url = `${hostName}/process` + (runCount
+    const url = `${hostName}/execute` + (runCount
       ? `/${workflowId}/${executionId}/${runCount}`
       : `/${workflowId}/${executionId}`);
 

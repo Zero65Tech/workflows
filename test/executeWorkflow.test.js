@@ -3,7 +3,7 @@ const utils = require('../src/utils');
 
 jest.mock('../src/utils');
 
-describe('processWorkflow', () => {
+describe('executeWorkflow', () => {
 
   let workflowDao, versionDao, executionDao, cloudTasksService, workflowsService;
 
@@ -28,7 +28,7 @@ describe('processWorkflow', () => {
 
   });
 
-  describe('should not process at all', () => {
+  describe('should not execute at all', () => {
     for(const state of [ 'completed', 'failed', 'error' ]) {
       it(`execution.state: ${state}`, async () => {
 
@@ -40,7 +40,7 @@ describe('processWorkflow', () => {
         const executionId = 'eId';
         const runCount = undefined;
 
-        await workflowsService.processWorkflow(workflowId, executionId, runCount);
+        await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
         expect(executionDao.get).toHaveBeenCalledTimes(1);
         expect(versionDao.get).not.toHaveBeenCalled();
@@ -55,7 +55,7 @@ describe('processWorkflow', () => {
 
   describe('should only create a new task if runCount < execution.count', () => {
     for(const runCount of [ undefined, null, 0, 1 ]) {
-      for(const state of [ 'running', 'waiting' ]) {
+      for(const state of [ 'queued', 'running', 'waiting' ]) {
         it(`execution.state: ${state}, runCount: ${runCount}`, async () => {
 
           const execution = { scheduled: new Date(), count: 2, state: state };
@@ -65,7 +65,7 @@ describe('processWorkflow', () => {
           const workflowId = 'wId';
           const executionId = 'eId';
 
-          await workflowsService.processWorkflow(workflowId, executionId, runCount);
+          await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
           expect(executionDao.get).toHaveBeenCalledTimes(1);
           expect(versionDao.get).not.toHaveBeenCalled();
@@ -110,7 +110,7 @@ describe('processWorkflow', () => {
       const executionId = 'eId';
       const runCount = 0;
 
-      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+      await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
       expect(executionDao.get).toHaveBeenCalledTimes(1);
       expect(versionDao.get).toHaveBeenCalledTimes(1);
@@ -181,7 +181,7 @@ describe('processWorkflow', () => {
       const executionId = 'eId';
       const runCount = 0;
 
-      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+      await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
       expect(executionDao.get).toHaveBeenCalledTimes(1);
       expect(versionDao.get).toHaveBeenCalledTimes(1);
@@ -252,7 +252,7 @@ describe('processWorkflow', () => {
       const executionId = 'eId';
       const runCount = 0;
 
-      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+      await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
       expect(executionDao.get).toHaveBeenCalledTimes(1);
       expect(versionDao.get).toHaveBeenCalledTimes(1);
@@ -330,7 +330,7 @@ describe('processWorkflow', () => {
       const executionId = 'eId';
       const runCount = 0;
 
-      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+      await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
       expect(executionDao.get).toHaveBeenCalledTimes(1);
       expect(versionDao.get).toHaveBeenCalledTimes(1);
@@ -416,7 +416,7 @@ describe('processWorkflow', () => {
       const executionId = 'eId';
       const runCount = 0;
 
-      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+      await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
       expect(executionDao.get).toHaveBeenCalledTimes(1);
       expect(versionDao.get).toHaveBeenCalledTimes(1);
@@ -502,7 +502,7 @@ describe('processWorkflow', () => {
       const executionId = 'eId';
       const runCount = 0;
 
-      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+      await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
       expect(executionDao.get).toHaveBeenCalledTimes(1);
       expect(versionDao.get).toHaveBeenCalledTimes(1);
@@ -591,7 +591,7 @@ describe('processWorkflow', () => {
       const executionId = 'eId';
       const runCount = 0;
 
-      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+      await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
       expect(executionDao.get).toHaveBeenCalledTimes(1);
       expect(versionDao.get).toHaveBeenCalledTimes(1);
@@ -680,7 +680,7 @@ describe('processWorkflow', () => {
       const executionId = 'eId';
       const runCount = 0;
 
-      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+      await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
       expect(executionDao.get).toHaveBeenCalledTimes(1);
       expect(versionDao.get).toHaveBeenCalledTimes(1);
@@ -769,7 +769,7 @@ describe('processWorkflow', () => {
       const executionId = 'eId';
       const runCount = 0;
 
-      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+      await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
       expect(executionDao.get).toHaveBeenCalledTimes(1);
       expect(versionDao.get).toHaveBeenCalledTimes(1);
@@ -859,7 +859,7 @@ describe('processWorkflow', () => {
       const executionId = 'eId';
       const runCount = 0;
 
-      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+      await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
       expect(executionDao.get).toHaveBeenCalledTimes(1);
       expect(versionDao.get).toHaveBeenCalledTimes(1);
@@ -968,7 +968,7 @@ describe('processWorkflow', () => {
       const executionId = 'eId';
       const runCount = 0;
 
-      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+      await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
       expect(executionDao.get).toHaveBeenCalledTimes(1);
       expect(versionDao.get).toHaveBeenCalledTimes(1);
@@ -1042,7 +1042,7 @@ describe('processWorkflow', () => {
       const executionId = 'eId';
       const runCount = 0;
 
-      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+      await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
       expect(executionDao.get).toHaveBeenCalledTimes(1);
       expect(versionDao.get).toHaveBeenCalledTimes(1);
@@ -1117,7 +1117,7 @@ describe('processWorkflow', () => {
       const executionId = 'eId';
       const runCount = 0;
 
-      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+      await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
       expect(executionDao.get).toHaveBeenCalledTimes(1);
       expect(versionDao.get).toHaveBeenCalledTimes(1);
@@ -1166,7 +1166,7 @@ describe('processWorkflow', () => {
       const executionId = 'eId';
       const runCount = 0;
 
-      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+      await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
       expect(executionDao.get).toHaveBeenCalledTimes(1);
       expect(versionDao.get).toHaveBeenCalledTimes(1);
@@ -1219,7 +1219,7 @@ describe('processWorkflow', () => {
       const executionId = 'eId';
       const runCount = 0;
 
-      await workflowsService.processWorkflow(workflowId, executionId, runCount);
+      await workflowsService.executeWorkflow(workflowId, executionId, runCount);
 
       expect(executionDao.get).toHaveBeenCalledTimes(1);
       expect(versionDao.get).toHaveBeenCalledTimes(1);

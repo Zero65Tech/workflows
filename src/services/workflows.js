@@ -57,6 +57,8 @@ class WorkflowsService {
 
     await this.cloudTasksService.createTask(workflowId, executionId, timestamp);
 
+    return executionId;
+
   }
 
   executeWorkflow = async (workflowId, executionId, runCount = 0) => {
@@ -92,7 +94,7 @@ class WorkflowsService {
     if(execution.state == 'completed' || execution.state == 'failed' || execution.state == 'error')
       return;
 
-    assert.ok(execution.state === 'running' || execution.state === 'waiting');
+    assert.ok(execution.state === 'queued' || execution.state === 'running' || execution.state === 'waiting');
 
     if(runCount < execution.count) {
       this.cloudTasksService.createTask(workflowId, executionId, execution.scheduled, execution.count);
@@ -131,7 +133,7 @@ class WorkflowsService {
       }
 
       const tasksPending = version.tasks.filter(task => !taskRunInfoMap[task.name].done);
-      const tasksNotBlocked = tasksPending.filter(task => task.needs.every(need => taskRunInfoMap[need].done));
+      const tasksNotBlocked = tasksPending.filter(task => !task.needs || task.needs.every(need => taskRunInfoMap[need].done));
       const tasksToRunNow = tasksNotBlocked.filter(task => taskRunInfoMap[task.name].nextRun <= new Date().getTime());
 
       if(tasksToRunNow.length) {

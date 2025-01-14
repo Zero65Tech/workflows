@@ -10,6 +10,11 @@ function toData(doc) {
   return data;
 }
 
+exports.get = async (workflowId, versionId) => {
+  const doc = await collection.doc(workflowId).collection('VERSION').doc(versionId).get();
+  return doc.exists ? toData(doc) : null;
+}
+
 exports.getLatest = async (workflowId) => {
 
   const query = collection.doc(workflowId)
