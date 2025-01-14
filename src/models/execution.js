@@ -6,7 +6,7 @@ const taskRun = Joi.object({
   started: Joi.date().iso().required(),
   ended: Joi.date().iso().allow(null).required(),
   response: Joi.object({
-    code: Joi.number().integer().required(),
+    status: Joi.number().integer().required(),
     data: Joi.string().required()
   }).allow(null).required()
 }).required();
