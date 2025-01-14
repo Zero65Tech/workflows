@@ -17,7 +17,7 @@ exports.add = Joi.object({
   state: Joi.string().valid('queued').required(),
   created: Joi.date().iso().required(),
   updated: Joi.date().iso().required()
-});
+}).required();
 
 exports.update = Joi.object({
   scheduled: Joi.date().iso(),

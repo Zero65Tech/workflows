@@ -1,4 +1,4 @@
-const { client, queuePath, hostName } = require('../../src/config/cloudTasks');
+const { client, queuePath, hostName, oidcToken } = require('../../src/config/cloudTasks');
 
 class CloudTasksService {
 
@@ -8,7 +8,7 @@ class CloudTasksService {
       ? `${workflowId}-${executionId}-${runCount}`
       : `${workflowId}-${executionId}`);
 
-    const url = hostName + (runCount
+    const url = `${hostName}/process` + (runCount
       ? `/${workflowId}/${executionId}/${runCount}`
       : `/${workflowId}/${executionId}`);
 
@@ -16,7 +16,7 @@ class CloudTasksService {
       ? { seconds: timestamp.getTime() / 1000 }
       : undefined;
 
-    const taskConfig = { name, httpRequest: { httpMethod: 'GET', url }, scheduleTime };
+    const taskConfig = { name, httpRequest: { httpMethod: 'GET', url, oidcToken }, scheduleTime };
 
     return await client.createTask({ parent: queuePath, task: taskConfig });
 

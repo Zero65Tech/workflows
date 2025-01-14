@@ -38,14 +38,14 @@ class WorkflowsService {
 
   }
 
-  triggerWorkflow = async (workflowId, params, timestamp = null) => {
+  triggerWorkflow = async (workflowId, params, timestamp) => {
 
     const version = await this.versionDao.getLatest(workflowId);
 
     const executionData = {
       versionId: version.id,
       params: params,
-      scheduled: timestamp,
+      scheduled: timestamp || new Date(),
       count: 0,
       tasks: [],
       state: 'queued',
@@ -55,7 +55,7 @@ class WorkflowsService {
 
     const executionId = await this.executionDao.create(workflowId, executionData);
 
-    await this.cloudTasksService.createTask(workflowId, executionId);
+    await this.cloudTasksService.createTask(workflowId, executionId, timestamp);
 
   }
 
