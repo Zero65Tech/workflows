@@ -9,7 +9,7 @@ class CloudTasksService {
     const url = `${hostName}/execute` + `/${workflowId}/${executionId}/${runCount}`;
 
     const scheduleTime = timestamp
-      ? { seconds: timestamp.getTime() / 1000 }
+      ? { seconds: Math.ceil(timestamp.getTime() / 1000) }
       : undefined;
 
     const taskConfig = { name, httpRequest: { httpMethod: 'GET', url, oidcToken }, scheduleTime };
