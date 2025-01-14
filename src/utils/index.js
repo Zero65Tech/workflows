@@ -10,9 +10,7 @@ exports.generateChecksum = (jsonObj)  => {
 
 exports.doHttpGet = async (url, params) => {
 
-  const auth = new GoogleAuth({
-    scopes: 'https://www.googleapis.com/auth/cloud-platform',
-  });
+  const auth = new GoogleAuth();
 
   const client = await auth.getIdTokenClient(url);
 

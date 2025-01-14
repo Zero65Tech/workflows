@@ -26,7 +26,7 @@ class WorkflowsController {
 
   executeWorkflow = async (req, res) => {
     const { workflowId, executionId, runCount } = req.params;
-    await this.workflowService.executeWorkflow(workflowId, executionId, runCount);
+    await this.workflowService.executeWorkflow(workflowId, executionId, parseInt(runCount));
     res.sendStatus(204);
   };
 

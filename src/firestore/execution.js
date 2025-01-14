@@ -6,6 +6,11 @@ const collection = client.collection(collectionName);
 function toData(doc) {
   const data = { id: doc.id, ...doc.data() };
   data.scheduled = data.scheduled ? data.scheduled.toDate() : null;
+  data.tasks.forEach(task => {
+    task.scheduled = task.scheduled.toDate();
+    task.started = task.started.toDate();
+    task.ended = task.ended ? task.ended.toDate() : null;
+  });
   data.created = data.created.toDate();
   data.updated = data.updated.toDate();
   return data;

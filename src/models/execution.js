@@ -5,7 +5,10 @@ const taskRun = Joi.object({
   scheduled: Joi.date().iso().required(),
   started: Joi.date().iso().required(),
   ended: Joi.date().iso().allow(null).required(),
-  response: Joi.string().allow(null).required()
+  response: Joi.object({
+    code: Joi.number().integer().required(),
+    data: Joi.string().required()
+  }).allow(null).required()
 }).required();
 
 exports.add = Joi.object({

@@ -55,7 +55,7 @@ class WorkflowsService {
 
     const executionId = await this.executionDao.create(workflowId, executionData);
 
-    await this.cloudTasksService.createTask(workflowId, executionId, timestamp);
+    await this.cloudTasksService.createTask(workflowId, executionId, timestamp, 0);
 
     return executionId;
 
@@ -115,7 +115,9 @@ class WorkflowsService {
         taskRunInfoMap[task.name] = { errorCount: 0, deferCount: 0, nextRun: 0, done: false };
 
       for(const taskRun of execution.tasks) {
-        if(taskRun.response.code == 200) {
+        if(taskRun.response === null) {
+          continue;
+        } else if(taskRun.response.code == 200) {
           taskRunInfoMap[taskRun.name].done = true;
         } else if(taskRun.response.code == 404) {
           assert.ok(taskRun.response.data.retryAfter);
@@ -123,7 +125,7 @@ class WorkflowsService {
           taskRunInfoMap[taskRun.name].errorCount = 0;
           taskRunInfoMap[taskRun.name].deferCount++;
           taskRunInfoMap[taskRun.name].nextRun = taskRun.ended.getTime() + taskRun.response.data.retryAfter * 1000;
-        } else if(taskRun.response.code == 500) {
+        } else if(taskRun.response.code == 503) {
           assert.equal(taskRunInfoMap[taskRun.name].done, false);
           taskRunInfoMap[taskRun.name].errorCount++;
           taskRunInfoMap[taskRun.name].nextRun = taskRun.ended.getTime() + taskRunInfoMap[taskRun.name].errorCount * 60 * 1000;
@@ -151,7 +153,7 @@ class WorkflowsService {
 
           utils.doHttpGet(task.url, version.params)
               .then(response => {
-                taskRun.response = { code: response.code, data: response.data };
+                taskRun.response = { code: response.status, data: response.data };
                 taskRun.ended = new Date();
               })
               .catch(error => {
