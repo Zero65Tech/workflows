@@ -125,7 +125,7 @@ class WorkflowsService {
           taskRunInfoMap[taskRun.name].errorCount = 0;
           taskRunInfoMap[taskRun.name].deferCount++;
           taskRunInfoMap[taskRun.name].nextRun = taskRun.ended.getTime() + taskRun.response.data.retryAfter * 1000;
-        } else if(taskRun.response.status == 503) {
+        } else if(taskRun.response.status == 500 || taskRun.response.status == 503) {
           assert.equal(taskRunInfoMap[taskRun.name].done, false);
           taskRunInfoMap[taskRun.name].errorCount++;
           taskRunInfoMap[taskRun.name].nextRun = taskRun.ended.getTime() + taskRunInfoMap[taskRun.name].errorCount * 60 * 1000;
