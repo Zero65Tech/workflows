@@ -4,25 +4,31 @@
 
     {
       "name": "raw_amf",
-      "url": "https://market.zero65.in/task/fetch/amf/bhavcopy"
+      "url": "https://market-165824922775.asia-south1.run.app/fetch/amf/nav-report"
     },
 
     {
       "name": "raw_amf_txt_to_csv",
       "needs": [ "raw_amf" ],
-      "url": "https://market.zero65.in/task/transform/bhavcopy/amf"
+      "url": "https://market-165824922775.asia-south1.run.app/transform/mf-nav-report/txt-to-csv"
     },
 
     {
       "name": "stage_amf",
       "needs": [ "raw_amf_txt_to_csv" ],
-      "url": "https://market.zero65.in/task/transform/bhavcopy/amf"
+      "url": "https://market-165824922775.asia-south1.run.app/transform/mf-nav-report/raw-to-stage"
+    },
+
+    {
+      "name": "ready_instruments",
+      "needs": [ "stage_amf" ],
+      "url": "https://market-165824922775.asia-south1.run.app/prepare/instruments/mf"
     },
 
     {
       "name": "ready_prices",
       "needs": [ "stage_amf" ],
-      "url": "https://market.zero65.in/task/prepare/prices-mf"
+      "url": "https://market-165824922775.asia-south1.run.app/prepare/prices/mf"
     }
 
   ]
