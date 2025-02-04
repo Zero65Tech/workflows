@@ -3,7 +3,7 @@ name: Zero65Tech
 on:
   push:
     branches:
-      - master
+      - development
 
 jobs:
   test:

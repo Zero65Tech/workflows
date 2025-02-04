@@ -8,7 +8,8 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "jest --coverage --testPathPattern=test/",
-    "lint": "npx eslint . --ext .js,.json  --fix",
+    "lint": "npx eslint . --ext .js,.json",
+    "fix": "npx eslint . --ext .js,.json --fix",
     "backfill": "node data/index.js"
   },
   "dependencies": {
